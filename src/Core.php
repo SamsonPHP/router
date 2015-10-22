@@ -44,7 +44,7 @@ class Core
             str_ireplace(
                 '/*', '/.*',
                 str_ireplace(
-                    '/', '\/', preg_replace('/@([a-z0-9]+)/ui', '(?<$1>[^/]+)', $input)
+                    '/', '\/', preg_replace('/@([a-z0-9]_-+)/ui', '(?<$1>[^/]+)', $input)
                 )
             );
     }

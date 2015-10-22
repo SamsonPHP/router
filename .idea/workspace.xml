@@ -30,8 +30,8 @@
       <file leaf-file-name="Core.php" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/Core.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.80963045" vertical-offset="467" max-vertical-offset="1666">
-              <caret line="75" column="32" selection-start-line="75" selection-start-column="32" selection-end-line="75" selection-end-column="32" />
+            <state vertical-scroll-proportion="0.2575588" vertical-offset="467" max-vertical-offset="1666">
+              <caret line="46" column="58" selection-start-line="46" selection-start-column="58" selection-end-line="46" selection-end-column="58" />
               <folding />
             </state>
           </provider>
@@ -156,7 +156,13 @@
       <option name="project" value="LOCAL" />
       <updated>1445526782318</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Added @param parsing">
+      <created>1445527219137</created>
+      <option name="number" value="00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1445527219137</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -202,7 +208,8 @@
     </option>
     <MESSAGE value="Moved to dynamic approach" />
     <MESSAGE value="Creating router parser" />
-    <option name="LAST_COMMIT_MESSAGE" value="Creating router parser" />
+    <MESSAGE value="Added @param parsing" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added @param parsing" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -238,8 +245,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Core.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.80963045" vertical-offset="467" max-vertical-offset="1666">
-          <caret line="75" column="32" selection-start-line="75" selection-start-column="32" selection-end-line="75" selection-end-column="32" />
+        <state vertical-scroll-proportion="0.2575588" vertical-offset="467" max-vertical-offset="1666">
+          <caret line="46" column="58" selection-start-line="46" selection-start-column="58" selection-end-line="46" selection-end-column="58" />
           <folding />
         </state>
       </provider>
