@@ -11,7 +11,7 @@ namespace samsonphp\router;
  * Gives ability to define routes and their callback for a class
  * @package samsonphp\router
  */
-interface RouterInterface
+interface RouteInterface
 {
     /**
      * @param string $prefix URL path prefix for prepending to all routes
