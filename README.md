@@ -1,2 +1,3 @@
-# router
+# SamsonPHP Router
+ 
 SamsonPHP router module

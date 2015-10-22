@@ -1,0 +1,34 @@
+{
+  "name": "samsonphp/router",
+  "description": "SamsonPHP router module",
+  "keywords": [
+    "router",
+    "routing"
+  ],
+  "authors": [
+    {
+      "name": "Vitaly Iegorov",
+      "email": "egorov@samsonos.com"
+    }
+  ],
+  "require-dev": {
+    "phpunit/phpunit": "4.*",
+    "behat/behat": "*"
+  },
+  "minimum-stability": "dev",
+  "license": "Open Software License (OSL) v 3.0",
+  "homepage": "http://samsonos.com/",
+  "autoload": {
+    "classmap": ["src/"],
+    "psr-4": {
+      "samsonphp\\router\\": "src/"
+    }
+  },
+  "config":{
+    "github-protocols":["https"]
+  },
+  "extra": { 
+    "samsonphp_package_compressable": "1", 
+    "samson_module_include": "1"
+  }
+}
