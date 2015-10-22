@@ -40,12 +40,13 @@ class Core
 
     protected function normalize($input)
     {
-        return preg_replace('/@([a-z]+)/ui', '(?<$1>[^/]+)',
+        return
             str_ireplace(
                 '/*', '/.*',
-                str_ireplace('/', '\/', $input)
-            )
-        );
+                str_ireplace(
+                    '/', '\/', preg_replace('/@([a-z0-9]+)/ui', '(?<$1>[^/]+)', $input)
+                )
+            );
     }
 
     protected function matchRoute($path, $routes)
@@ -58,10 +59,11 @@ class Core
 
         // Iterate all routes
         foreach ($routes as $routePath => $routeDate) {
-            //trace($this->normalize($routePath), 1);
+            $routePattern = '/^'.$this->normalize($routePath).'/';
+            //trace($routePattern, 1);
             // Match route pattern with path
-            if(preg_match('/^'.$this->normalize($routePath).'/', $path, $matches)){
-                trace($matches, 1);
+            if(preg_match($routePattern, $path, $matches)){
+                //trace($matches, 1);
                 // Store only longest matched route
                 if (strlen($routePath) > strlen($candidate)) {
                     $candidates[$routePath] = $routeDate;

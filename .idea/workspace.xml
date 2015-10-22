@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="f5522ed5-bcca-4fa6-aedc-fd4b340a2e4e" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Core.php" afterPath="$PROJECT_DIR$/src/Core.php" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RouteInterface.php" afterPath="$PROJECT_DIR$/src/RouteInterface.php" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="router.iws" />
@@ -31,8 +30,8 @@
       <file leaf-file-name="Core.php" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/Core.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.4098544" vertical-offset="416" max-vertical-offset="1632">
-              <caret line="51" column="5" selection-start-line="51" selection-start-column="5" selection-end-line="51" selection-end-column="5" />
+            <state vertical-scroll-proportion="0.80963045" vertical-offset="467" max-vertical-offset="1666">
+              <caret line="75" column="32" selection-start-line="75" selection-start-column="32" selection-end-line="75" selection-end-column="32" />
               <folding />
             </state>
           </provider>
@@ -151,7 +150,13 @@
       <option name="project" value="LOCAL" />
       <updated>1445523511175</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Creating router parser">
+      <created>1445526782318</created>
+      <option name="number" value="00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1445526782318</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -196,7 +201,8 @@
       <TodoPanelSettings />
     </option>
     <MESSAGE value="Moved to dynamic approach" />
-    <option name="LAST_COMMIT_MESSAGE" value="Moved to dynamic approach" />
+    <MESSAGE value="Creating router parser" />
+    <option name="LAST_COMMIT_MESSAGE" value="Creating router parser" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -232,8 +238,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Core.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.4098544" vertical-offset="416" max-vertical-offset="1632">
-          <caret line="51" column="5" selection-start-line="51" selection-start-column="5" selection-end-line="51" selection-end-column="5" />
+        <state vertical-scroll-proportion="0.80963045" vertical-offset="467" max-vertical-offset="1666">
+          <caret line="75" column="32" selection-start-line="75" selection-start-column="32" selection-end-line="75" selection-end-column="32" />
           <folding />
         </state>
       </provider>
