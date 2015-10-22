@@ -14,8 +14,7 @@ namespace samsonphp\router;
 interface RouteInterface
 {
     /**
-     * @param string $prefix URL path prefix for prepending to all routes
      * @return array Collection of route identifiers, their patterns and callbacks
      */
-    public function routes($prefix = '/');
+    public function routes();
 }
