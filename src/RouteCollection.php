@@ -44,11 +44,17 @@ class RouteCollection implements \ArrayAccess, \Iterator
      */
     public function match($path)
     {
-        $matchingRoute = null;
+        // Create route for comparing patterns
+        $matchingRoute = new Route('/', 'echo');
         foreach ($this->routes as $route) {
-            if ($route->match($path)) {
-                return $route;
+            if (strlen($matchingRoute->pattern) < $route->match($path)) {
+                $matchingRoute = $route;
             }
+        }
+
+        // Check if we have found other route then default
+        if ($matchingRoute->pattern !== '/') {
+            return $matchingRoute;
         }
 
         // If we are here - no route matches path

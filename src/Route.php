@@ -107,9 +107,8 @@ class Route
      */
     public function match($path)
     {
-        trace($this->regexpPattern.'-'.$path, 1);
         $matches = array();
-        if(preg_match($this->pattern, $path, $matches)){
+        if(preg_match($this->regexpPattern, $path, $matches)){
             return strlen($this->pattern);
         } else {
             return false;

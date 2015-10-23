@@ -49,12 +49,11 @@ class Core
      */
     protected function createGenericRoutes($module)
     {
-        $prefix = '/'.$module->id;
-
         $routes = new RouteCollection();
 
         // Iterate class methods
         foreach (get_class_methods($module) as $method) {
+            $prefix = '/'.$module->id;
             // Try to find standard controllers
             switch (strtolower($method)) {
                 case GenericInterface::CTR_UNI: // Add generic controller action
@@ -106,21 +105,35 @@ class Core
      * @param mixed             $result     Return value as routing result
      * @param string            $default    Default route path
      */
-    public function router(\samson\core\Core & $core, & $result, & $path)
+    public function router(\samson\core\Core & $core, & $result, & $path, $async = false)
     {
         /** @var Route $route Match route in routes collection to get callback & parameters */
         if (false !== ($route = $this->loadRoutes($core->module_stack)->match($path))) {
-            trace($route, 1);
             // Get object from callback & set it as current active core module
-//            $core->active($handlerData[0][0]);
-//
-//            $parameters = array();
-//
-//            // Perform controller action
-//            $result = is_callable($handlerData[0]) ? call_user_func_array($handlerData[0], $parameters) : A_FAILED;
-//
-//            // Stop candidate search
-//            $result = !isset($result) ? A_SUCCESS : $result;
+            $core->active($route->callback[0]);
+
+            // Check if request has special asynchronous markers
+            if ($_SERVER['HTTP_ACCEPT'] == '*/*' || isset($_SERVER['HTTP_SJSASYNC']) || isset($_POST['SJSASYNC'])) {
+                // If this route is asynchronous
+                if ($route->async) {
+                    $core->async(true);
+                }
+
+
+            }
+
+            // If this route needs caching
+            if ($route->cache) {
+                $core->cached();
+            }
+
+            $parameters = array();
+
+            // Perform controller action
+            $result = is_callable($route->callback) ? call_user_func_array($route->callback, $parameters) : A_FAILED;
+
+            // Stop candidate search
+            $result = !isset($result) ? A_SUCCESS : $result;
         }
     }
 }
