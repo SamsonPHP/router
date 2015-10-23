@@ -42,28 +42,31 @@ class Core
     {
         return
             str_ireplace(
-                '/*', '/.*',
+                '/', '\/',
                 str_ireplace(
-                    '/', '\/', preg_replace('/@([a-z0-9]_-+)/ui', '(?<$1>[^/]+)', $input)
+                    '/*', '(/?|/.*)',
+                    preg_replace('/@([a-z0-9]_-+)/ui', '(?<$1>[^/]+)', $input)
                 )
             );
     }
 
     protected function matchRoute($path, $routes)
     {
-        //trace(array_keys($routes), 1);
-        //trace('/^'.$this->normalize($path).'/', 1);
+        $normalizedRoutes = array_map(array($this, 'normalize'), array_keys($routes));
+
+        trace($normalizedRoutes, 1);
+        trace($path, 1);
 
         $candidates = array();
         $candidate = false;
 
         // Iterate all routes
         foreach ($routes as $routePath => $routeDate) {
-            $routePattern = '/^'.$this->normalize($routePath).'/';
+            $routePattern = '/^'.$this->normalize($routePath).'/ui';
             //trace($routePattern, 1);
             // Match route pattern with path
             if(preg_match($routePattern, $path, $matches)){
-                //trace($matches, 1);
+                trace($matches, 1);
                 // Store only longest matched route
                 if (strlen($routePath) > strlen($candidate)) {
                     $candidates[$routePath] = $routeDate;
@@ -72,10 +75,14 @@ class Core
             }
         }
 
-        trace($candidates[$candidate], 1);
-        //trace($candidates, 1);
-
-        return $candidates[$candidate];
+        // We have found route candidate
+        if (sizeof($candidates)) {
+            trace($candidates[$candidate], 1);
+            //trace($candidates, 1);
+            return $candidates[$candidate];
+        } else { // No route has been found
+            return false;
+        }
     }
 
     /**
