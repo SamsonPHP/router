@@ -5,14 +5,52 @@
  * Date: 23.10.15
  * Time: 08:35
  */
-
 namespace samsonphp\router;
 
+use samsonphp\router\exception\IdentifierDuplication;
+use samsonphp\router\exception\NoMatchFound;
 
+/**
+ * Routes collection
+ * @package samsonphp\router
+ */
 class RouteCollection implements \ArrayAccess
 {
     /** @var Route[]  */
     protected $routes = array();
+
+    /**
+     * Find matching route by path
+     * @param string $path Path for matching route patterns
+     * @throws NoMatchFound
+     */
+    public function match($path)
+    {
+        $matchingRoute = null;
+        foreach ($this->routes as $route) {
+            if ($route->)
+        }
+
+        if(true) {
+
+        } else {
+            throw new NoMatchFound();
+        }
+    }
+
+    /**
+     * Add route
+     * @param Route $route
+     * @throws IdentifierDuplication
+     */
+    public function add(Route $route)
+    {
+        if (!isset($this->routes[$route->identifier])) {
+            $this->routes[$route->identifier] = $route;
+        } else {
+            throw new IdentifierDuplication();
+        }
+    }
 
     /**
      * Whether a offset exists
