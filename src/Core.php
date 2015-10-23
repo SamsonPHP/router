@@ -49,18 +49,24 @@ class Core
      */
     protected function createGenericRoutes($module)
     {
+        /** @var RouteCollection $routes */
         $routes = new RouteCollection();
+
+        /** @var Route $universalRoute */
+        $universalRoute = null;
+        /** @var Rotue $baseRoute */
+        $baseRoute = null;
 
         // Iterate class methods
         foreach (get_class_methods($module) as $method) {
-            $prefix = '/'.$module->id;
+            $prefix = '/' . $module->id;
             // Try to find standard controllers
             switch (strtolower($method)) {
                 case GenericInterface::CTR_UNI: // Add generic controller action
-                    $routes->add(new Route($prefix . '/*', array($module, $method), $module->id . GenericInterface::CTR_UNI));
+                    $universalRoute = new Route($prefix . '/*', array($module, $method), $module->id . GenericInterface::CTR_UNI);
                     break;
                 case GenericInterface::CTR_BASE: // Add base controller action
-                    $routes->add(new Route($prefix . '/?$', array($module, $method), $module->id . GenericInterface::CTR_BASE));
+                    $baseRoute = new Route($prefix . '/?$', array($module, $method), $module->id . GenericInterface::CTR_BASE);
                     break;
                 case GenericInterface::CTR_POST:// not implemented
                 case GenericInterface::CTR_PUT:// not implemented
@@ -93,6 +99,26 @@ class Core
                         );
                     }
             }
+        }
+
+        // Add universal controller action
+        if (isset($universalRoute)) {
+            $routes->add($universalRoute);
+        }
+
+        // Add base controller action
+        if (isset($baseRoute)) {
+            $routes->add($baseRoute);
+            // If we have not found base controller action but we have universal action
+        } else if (isset($universalRoute)){
+           // Bind its pattern to universal controller callback
+            $routes->add(
+                new Route(
+                    $prefix . '/?$',
+                    $universalRoute->callback,
+                    $module->id . GenericInterface::CTR_BASE
+                )
+            );
         }
 
         return $routes;

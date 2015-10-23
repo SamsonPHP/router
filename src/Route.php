@@ -109,7 +109,7 @@ class Route
     {
         $matches = array();
         if(preg_match($this->regexpPattern, $path, $matches)){
-            //trace('Match: '.$this->regexpPattern.'('.strlen($this->pattern).')');
+            //trace('Match: '.$this->regexpPattern.'('.strlen($this->pattern).')',1);
             return strlen($this->pattern);
         } else {
             return false;
