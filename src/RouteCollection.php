@@ -16,28 +16,26 @@ use samsonphp\router\exception\NoMatchFound;
  */
 class RouteCollection implements \ArrayAccess
 {
-    /** @var Route[]  */
+    /** @var Route[] */
     protected $routes = array();
 
     /**
      * Find matching route by path
      * @param string $path Path for matching route patterns
      * @throws NoMatchFound
+     * @returns Route|boolean Matched route or false
      */
     public function match($path)
     {
         $matchingRoute = null;
         foreach ($this->routes as $route) {
             if ($route->match($path)) {
-
+                return $route;
             }
         }
 
-        if(true) {
-
-        } else {
-            throw new NoMatchFound();
-        }
+        // If we are here - no route matches path
+        throw new NoMatchFound();
     }
 
     /**

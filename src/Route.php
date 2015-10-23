@@ -6,6 +6,7 @@
  * Time: 08:36
  */
 namespace samsonphp\router;
+use samsonphp\router\exception\ArrayToObjectConversion;
 
 /**
  * Route
@@ -42,9 +43,37 @@ class Route
     /** @var array Parameters configuration */
     public $parameters = array();
 
-    public function __construct($pattern, $identifier = null, $method = self::METHOD_ANY, $async = false, $cache = false)
+    /** @var callable Route handler */
+    public $callback;
+
+    /**
+     * Create route from array
+     * @param string $pattern
+     * @param array $data
+     * @return Route New Route object instance
+     * @throws ArrayToObjectConversion
+     */
+    public static function fromArray($pattern, array $data)
+    {
+        if (sizeof($data) >= 4) {
+            return new self($pattern, $data[0], $data[1], isset($data[4]) ? $data[4] : self::METHOD_ANY, $data[2], $data[3]);
+        }
+
+        throw new ArrayToObjectConversion();
+    }
+
+    /**
+     * @param string $pattern Route matching pattern
+     * @param callable $callback Callback for route
+     * @param string|null $identifier Route unique identifier, if empty - unique will be generated
+     * @param string $method HTTP request method
+     * @param bool|false $async Route asynchronous flag
+     * @param bool|false $cache Route caching flag
+     */
+    public function __construct($pattern, $callback, $identifier = null, $method = self::METHOD_ANY, $async = false, $cache = false)
     {
         $this->pattern = $pattern;
+        $this->callback = $callback;
         $this->method = $method;
         $this->async = $async;
         $this->cache = $cache;
