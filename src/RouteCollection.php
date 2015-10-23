@@ -14,10 +14,27 @@ use samsonphp\router\exception\NoMatchFound;
  * Routes collection
  * @package samsonphp\router
  */
-class RouteCollection implements \ArrayAccess
+class RouteCollection implements \ArrayAccess, \Iterator
 {
     /** @var Route[] */
     protected $routes = array();
+
+    /**
+     * Merger two routes collections
+     * @param RouteCollection $collection
+     * @throws IdentifierDuplication
+     * @returns RouteCollection New route collection instance
+     */
+    public function merge(RouteCollection $collection)
+    {
+        $newCollection = clone $this;
+
+        foreach ($collection as $route) {
+            $newCollection->add($route);
+        }
+
+        return $newCollection;
+    }
 
     /**
      * Find matching route by path
@@ -48,7 +65,7 @@ class RouteCollection implements \ArrayAccess
         if (!isset($this->routes[$route->identifier])) {
             $this->routes[$route->identifier] = $route;
         } else {
-            throw new IdentifierDuplication();
+            throw new IdentifierDuplication('Identifier['.$route->identifier.'] already exists');
         }
     }
 
@@ -112,5 +129,62 @@ class RouteCollection implements \ArrayAccess
     public function offsetUnset($offset)
     {
         unset($this->routes[$offset]);
+    }
+
+    /**
+     * Return the current element
+     * @link http://php.net/manual/en/iterator.current.php
+     * @return mixed Can return any type.
+     * @since 5.0.0
+     */
+    public function current()
+    {
+        return current($this->routes);
+    }
+
+    /**
+     * Move forward to next element
+     * @link http://php.net/manual/en/iterator.next.php
+     * @return void Any returned value is ignored.
+     * @since 5.0.0
+     */
+    public function next()
+    {
+        return next($this->routes);
+    }
+
+    /**
+     * Return the key of the current element
+     * @link http://php.net/manual/en/iterator.key.php
+     * @return mixed scalar on success, or null on failure.
+     * @since 5.0.0
+     */
+    public function key()
+    {
+        return key($this->routes);
+    }
+
+    /**
+     * Checks if current position is valid
+     * @link http://php.net/manual/en/iterator.valid.php
+     * @return boolean The return value will be casted to boolean and then evaluated.
+     * Returns true on success or false on failure.
+     * @since 5.0.0
+     */
+    public function valid()
+    {
+        $key = key($this->routes);
+        return ($key !== NULL && $key !== FALSE);
+    }
+
+    /**
+     * Rewind the Iterator to the first element
+     * @link http://php.net/manual/en/iterator.rewind.php
+     * @return void Any returned value is ignored.
+     * @since 5.0.0
+     */
+    public function rewind()
+    {
+        return reset($this->routes);
     }
 }

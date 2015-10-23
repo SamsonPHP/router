@@ -23,66 +23,80 @@ class Core
      */
     protected function loadRoutes($modules, $prefix = '')
     {
-        $routes = array();
+        $routes = new RouteCollection();
         foreach ($modules as $moduleID => $module) {
             //if (in_array('samsonphp\router\RouteInterface', class_implements($module, false))) {
             if(is_subclass_of($module, 'samsonphp\router\RouteInterface')) {
-                // Call class interface method to retrieve object routes and merge into one collection, passing prefix
-                foreach ($module->routes() as $path => $data) {
-                    // Enclose special char for RegExp
-                    $routes[$path] = $data;
+                // Try to get module routes using interface method
+                $moduleRoutes = $module->routes();
+                // There are no routes defined
+                if (!sizeof($moduleRoutes)) {
+                    // Generate generic routes
+                    $moduleRoutes = $this->createGenericRoutes($module);
                 }
+
+                $routes = $routes->merge($moduleRoutes);
             }
         }
 
         return $routes;
     }
 
-    protected function normalize($input)
+    /**
+     *
+     * @param $module
+     * @return array
+     */
+    protected function createGenericRoutes($module)
     {
-        return
-            str_ireplace(
-                '/', '\/',
-                str_ireplace(
-                    '/*', '/.*',
-                    preg_replace('/@([a-z0-9]_-+)/ui', '(?<$1>[^/]+)', $input)
-                )
-            );
-    }
+        $prefix = '/'.$module->id;
 
-    protected function matchRoute($path, $routes)
-    {
-        $normalizedRoutes = array_map(array($this, 'normalize'), array_keys($routes));
+        $routes = new RouteCollection();
 
-        trace($normalizedRoutes, 1);
-        //trace($path, 1);
+        // Iterate class methods
+        foreach (get_class_methods($module) as $method) {
+            // Try to find standard controllers
+            switch (strtolower($method)) {
+                case GenericInterface::CTR_UNI: // Add generic controller action
+                    $routes->add(new Route($prefix . '/*', array($module, $method), $module->id . GenericInterface::CTR_UNI));
+                    break;
+                case GenericInterface::CTR_BASE: // Add base controller action
+                    $routes->add(new Route($prefix . '/?$', array($module, $method), $module->id . GenericInterface::CTR_BASE));
+                    break;
+                case GenericInterface::CTR_POST:// not implemented
+                case GenericInterface::CTR_PUT:// not implemented
+                case GenericInterface::CTR_DELETE:// not implemented
+                    break;
 
-        $candidates = array();
-        $candidate = false;
+                // Ignore magic methods
+                case '__call':
+                case '__wakeup':
+                case '__sleep':
+                case '__construct':
+                case '__destruct':
+                case '__set':
+                case '__get':
+                    break;
 
-        // Iterate all routes
-        foreach ($routes as $routePath => $routeDate) {
-            $routePattern = '/^' . $this->normalize($routePath) . '/ui';
-            //trace($routePattern, 1);
-            // Match route pattern with path
-            if (preg_match($routePattern, $path, $matches)) {
-                //trace($matches, 1);
-                // Store only longest matched route
-                if (strlen($routePath) > strlen($candidate)) {
-                    $candidates[$routePath] = $routeDate;
-                    $candidate = $routePath;
-                }
+                // This is not special controller action
+                default:
+                    // Match controller action OOP pattern
+                    if (preg_match('/^' . GenericInterface::OBJ_PREFIX . '(?<async_>async_)?(?<cache_>cache_)?(?<action>.+)/i', $method, $matches)) {
+                        // Add route for this controller action
+                        $routes->add(
+                            new Route($prefix . '/' . $matches['action'],
+                                array($module, $method), // Route callback
+                                $module->id . '_' . $method, // Route identifier
+                                Route::METHOD_ANY,
+                                $matches[GenericInterface::ASYNC_PREFIX] == GenericInterface::ASYNC_PREFIX ? true : false,
+                                $matches[GenericInterface::CACHE_PREFIX] == GenericInterface::CACHE_PREFIX ? true : false
+                            )
+                        );
+                    }
             }
         }
 
-        // We have found route candidate
-        if (sizeof($candidates)) {
-            trace($candidates[$candidate], 1);
-            trace(array_keys($candidates), 1);
-            return $candidates[$candidate];
-        } else { // No route has been found
-            return false;
-        }
+        return $routes;
     }
 
     /**
@@ -94,20 +108,19 @@ class Core
      */
     public function router(\samson\core\Core & $core, & $result, & $path)
     {
-        $routes = $this->loadRoutes($core->module_stack);
-
-        // Match route to get callback & parameters
-        if (false !== ($handlerData = $this->matchRoute($path, $routes))) {
+        /** @var Route $route Match route in routes collection to get callback & parameters */
+        if (false !== ($route = $this->loadRoutes($core->module_stack)->match($path))) {
+            trace($route, 1);
             // Get object from callback & set it as current active core module
-            $core->active($handlerData[0][0]);
-
-            $parameters = array();
-
-            // Perform controller action
-            $result = is_callable($handlerData[0]) ? call_user_func_array($handlerData[0], $parameters) : A_FAILED;
-
-            // Stop candidate search
-            $result = !isset($result) ? A_SUCCESS : $result;
+//            $core->active($handlerData[0][0]);
+//
+//            $parameters = array();
+//
+//            // Perform controller action
+//            $result = is_callable($handlerData[0]) ? call_user_func_array($handlerData[0], $parameters) : A_FAILED;
+//
+//            // Stop candidate search
+//            $result = !isset($result) ? A_SUCCESS : $result;
         }
     }
 }
