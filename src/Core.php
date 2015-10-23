@@ -44,7 +44,7 @@ class Core
             str_ireplace(
                 '/', '\/',
                 str_ireplace(
-                    '/*', '(/?|/.*)',
+                    '/*', '/.*',
                     preg_replace('/@([a-z0-9]_-+)/ui', '(?<$1>[^/]+)', $input)
                 )
             );
@@ -54,19 +54,19 @@ class Core
     {
         $normalizedRoutes = array_map(array($this, 'normalize'), array_keys($routes));
 
-        trace($normalizedRoutes, 1);
-        trace($path, 1);
+        //trace($normalizedRoutes, 1);
+        //trace($path, 1);
 
         $candidates = array();
         $candidate = false;
 
         // Iterate all routes
         foreach ($routes as $routePath => $routeDate) {
-            $routePattern = '/^'.$this->normalize($routePath).'/ui';
+            $routePattern = '/^' . $this->normalize($routePath) . '/ui';
             //trace($routePattern, 1);
             // Match route pattern with path
-            if(preg_match($routePattern, $path, $matches)){
-                trace($matches, 1);
+            if (preg_match($routePattern, $path, $matches)) {
+                //trace($matches, 1);
                 // Store only longest matched route
                 if (strlen($routePath) > strlen($candidate)) {
                     $candidates[$routePath] = $routeDate;
@@ -77,8 +77,8 @@ class Core
 
         // We have found route candidate
         if (sizeof($candidates)) {
-            trace($candidates[$candidate], 1);
-            //trace($candidates, 1);
+            //trace($candidates[$candidate], 1);
+            //trace(array_keys($candidates), 1);
             return $candidates[$candidate];
         } else { // No route has been found
             return false;
@@ -96,9 +96,18 @@ class Core
     {
         $routes = $this->loadRoutes($core->module_stack);
 
-        // Match route to get callback
-        if (false !== ($callback = $this->matchRoute($path, $routes))) {
+        // Match route to get callback & parameters
+        if (false !== ($handlerData = $this->matchRoute($path, $routes))) {
+            // Get object from callback & set it as current active core module
+            $core->active($handlerData[0][0]);
 
+            $parameters = array();
+
+            // Perform controller action
+            $result = is_callable($handlerData[0]) ? call_user_func_array($handlerData[0], $parameters) : A_FAILED;
+
+            // Stop candidate search
+            $result = !isset($result) ? A_SUCCESS : $result;
         }
     }
 }
