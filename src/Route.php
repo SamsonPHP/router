@@ -45,10 +45,12 @@ class Route
     public function __construct($pattern, $identifier = null, $method = self::METHOD_ANY, $async = false, $cache = false)
     {
         $this->pattern = $pattern;
-        $this->identifier = isset($identifier) ? $identifier : uniqid('route');
         $this->method = $method;
         $this->async = $async;
         $this->cache = $cache;
+        // Every route should have an identifier otherwise create unique
+        $this->identifier = isset($identifier) ? $identifier : uniqid('route');
+        // Compile to regexp
         $this->regexpPattern = $this->internalToRegExp($this->pattern);
     }
 

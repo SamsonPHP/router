@@ -28,7 +28,9 @@ class RouteCollection implements \ArrayAccess
     {
         $matchingRoute = null;
         foreach ($this->routes as $route) {
-            if ($route->)
+            if ($route->match($path)) {
+
+            }
         }
 
         if(true) {
