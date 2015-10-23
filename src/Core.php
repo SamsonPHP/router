@@ -54,7 +54,7 @@ class Core
     {
         $normalizedRoutes = array_map(array($this, 'normalize'), array_keys($routes));
 
-        //trace($normalizedRoutes, 1);
+        trace($normalizedRoutes, 1);
         //trace($path, 1);
 
         $candidates = array();
@@ -77,8 +77,8 @@ class Core
 
         // We have found route candidate
         if (sizeof($candidates)) {
-            //trace($candidates[$candidate], 1);
-            //trace(array_keys($candidates), 1);
+            trace($candidates[$candidate], 1);
+            trace(array_keys($candidates), 1);
             return $candidates[$candidate];
         } else { // No route has been found
             return false;
