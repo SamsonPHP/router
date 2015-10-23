@@ -48,7 +48,12 @@ class RouteCollection implements \ArrayAccess, \Iterator
         $matchingRoute = new Route('', 'echo');
         foreach ($this->routes as $route) {
             //trace('Comparing: path:"'.$path.'" "'.$route->regexpPattern.'" with "'.$matchingRoute->regexpPattern.'"');
-            if (strlen($matchingRoute->pattern) <= $route->match($path)) {
+            // Try to match this route with path and store pattern length
+            $matchingResult = $route->match($path);
+            // Search for longest pattern matching route
+            if ($matchingResult !== false && strlen($matchingRoute->pattern) <= $matchingResult) {
+                //trace('Found matching route:"'.$route->pattern.'"');
+                // Store longest matching route
                 $matchingRoute = $route;
             }
         }
