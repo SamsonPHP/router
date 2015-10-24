@@ -6,6 +6,7 @@
  * Time: 16:20
  */
 namespace samsonphp\router;
+use samsonphp\router\exception\NoMatchFound;
 
 /**
  * Main routing logic
@@ -43,6 +44,28 @@ class Core
     }
 
     /**
+     * Convert class method signature into pattern with parameters
+     * @param object $object Object
+     * @param string $method Method name
+     * @return string Pattern string with parameters placeholders
+     */
+    protected function buildMethodParameters($object, $method)
+    {
+        $pattern = array();
+
+        // Analyze callback arguments
+        $reflectionMethod = new \ReflectionMethod($object, $method);
+        foreach ($reflectionMethod->getParameters() as $parameter) {
+            // Build pattern markers
+            $pattern[] = '@'.$parameter->getName();
+            trace($parameter->getDefaultValue(),1);
+        }
+
+        return implode('/', $pattern);
+    }
+
+
+    /**
      *
      * @param $module
      * @return array
@@ -64,6 +87,7 @@ class Core
             switch (strtolower($method)) {
                 case GenericInterface::CTR_UNI: // Add generic controller action
                     $universalRoute = new Route($prefix . '/*', array($module, $method), $module->id . GenericInterface::CTR_UNI);
+                    trace($this->buildMethodParameters($module, $method), 1);
                     break;
                 case GenericInterface::CTR_BASE: // Add base controller action
                     $baseRoute = new Route($prefix . '/?$', array($module, $method), $module->id . GenericInterface::CTR_BASE);
@@ -87,9 +111,15 @@ class Core
                 default:
                     // Match controller action OOP pattern
                     if (preg_match('/^' . GenericInterface::OBJ_PREFIX . '(?<async_>async_)?(?<cache_>cache_)?(?<action>.+)/i', $method, $matches)) {
+                        // Build controller action pattern
+                        $pattern = $prefix . '/' . $matches['action'].'/'.$this->buildMethodParameters($module, $method);
+
+                        //trace($pattern, 1);
+
                         // Add route for this controller action
                         $routes->add(
-                            new Route($prefix . '/' . $matches['action'],
+                            new Route(
+                                $pattern,
                                 array($module, $method), // Route callback
                                 $module->id . '_' . $method, // Route identifier
                                 Route::METHOD_ANY,
@@ -154,17 +184,19 @@ class Core
         // Load core module routes
         $routes = $this->loadRoutes($core->module_stack);
 
-        // Add default '/' route
-        $routes->add(new Route('/', $this->findGenericDefaultAction($core, $default), 'main_page'));
-
-        /** @var Route $route Match route in routes collection to get callback & parameters */
-        $route = $path === '/' ? $routes['main_page'] : $routes->match($path);
+        try {
+            /** @var Route $route Match route in routes collection or use default main_page route */
+            $route = $path === '/' ? new Route('/', $this->findGenericDefaultAction($core, $default), 'main_page') : $routes->match($path);
+        } catch(NoMatchFound $e) { // No matching routes was found
+            return $result = A_FAILED;
+        }
 
         if ($route !== false) {
+
             // Get object from callback & set it as current active core module
             $core->active($route->callback[0]);
 
-            //trace($route, 1);
+            trace($route->pattern, 1);
 
             // Route parameters
             $parameters = array();
