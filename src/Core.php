@@ -17,6 +17,39 @@ class Core
     /** @var array Collection of all application routes */
     protected $routes = array();
 
+    protected function generateIf(&$dataPointer, $path, &$code = '', $level = 1)
+    {
+        $conditionStarted = false;
+        $tabs = implode('', array_fill(0, $level, ' '));
+        foreach ($dataPointer as $placeholder => $data) {
+            $newPath = $path . '/' . $placeholder;
+            $code .= $tabs . '// ' . $newPath . "\n";
+            $stIndex = strlen($path) + 1;
+            $length = strlen($placeholder);
+
+            // This is a route variable
+            if (strpos($placeholder, '{') !== false) {
+                $code .= $tabs . 'if (preg_match("/(?<' . $placeholder . '>[0-9a-z_]+)/i", substr($path, ' . $stIndex . ',  strpos($path, "/", ' . $stIndex . ') ? strlen($path) - strpos($path, "/", ' . $stIndex . ') : 0), $matches)) {' . "\n";
+                // When we have route parameter we do not split logic tree as different parameters can match
+                $conditionStarted = false;
+            } else { // Generate route placeholder comparison
+                $code .= $tabs . ($conditionStarted ? 'else ' : '') . 'if (substr($path, ' . $stIndex . ', ' . $length . ') === "' . $placeholder . '" ) {' . "\n";
+            }
+
+            // This is route end - call handler
+            if (is_string($data)) {
+                $code .= $tabs . '     return $routes["' . $data . '"]->callback;' . "\n";
+            } else { // Go deeper in recursion
+                $this->generateIf($data, $newPath, $code, $level + 5);
+            }
+
+            $code .= $tabs . '}' . "\n";
+            $conditionStarted = true;
+        }
+
+        return $code;
+    }
+
     /**
      * Load all web-application routes
      * @param string $prefix URL path prefix for loaded routes
@@ -40,6 +73,27 @@ class Core
             }
         }
 
+        // Build multi-dimentional array-tree
+        $routeTree = array();
+        foreach ($routes as $route) {
+            $map = array();
+            foreach (explode('/', $route->pattern) as $routePart) {
+                // Remove empty parts
+                if (isset($routePart{0})) {
+                    $map[] = '["' . $routePart . '"]';
+                }
+            }
+            eval('$routeTree'.implode('', $map).'= $route->identifier;');
+        }
+        $routeTree = array_filter($routeTree);
+
+        $routerCode = 'function __router($path, array & $routes) {'."\n";
+        $routerCode.= $this->generateIf($routeTree, '')."\n".'}';
+        trace($routerCode);
+
+        //trace($routeTree);
+        die('');
+
         return $routes;
     }
 
@@ -57,8 +111,8 @@ class Core
         $reflectionMethod = new \ReflectionMethod($object, $method);
         foreach ($reflectionMethod->getParameters() as $parameter) {
             // Build pattern markers
-            $pattern[] = '@'.$parameter->getName();
-            trace($parameter->getDefaultValue(),1);
+            $pattern[] = '{'.$parameter->getName().'}';
+            //trace($parameter->getDefaultValue(),1);
         }
 
         return implode('/', $pattern);
@@ -87,7 +141,7 @@ class Core
             switch (strtolower($method)) {
                 case GenericInterface::CTR_UNI: // Add generic controller action
                     $universalRoute = new Route($prefix . '/*', array($module, $method), $module->id . GenericInterface::CTR_UNI);
-                    trace($this->buildMethodParameters($module, $method), 1);
+                    //trace($this->buildMethodParameters($module, $method), 1);
                     break;
                 case GenericInterface::CTR_BASE: // Add base controller action
                     $baseRoute = new Route($prefix . '/?$', array($module, $method), $module->id . GenericInterface::CTR_BASE);
@@ -196,7 +250,7 @@ class Core
             // Get object from callback & set it as current active core module
             $core->active($route->callback[0]);
 
-            trace($route->pattern, 1);
+            //trace($route->pattern, 1);
 
             // Route parameters
             $parameters = array();
