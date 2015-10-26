@@ -33,6 +33,7 @@ class Generator
             eval('$routeTree'.implode('', $map).'= $route->identifier;');
         }
 
+        // Wrap routing logic into function to support returns
         $routerCode = 'function __router($path, array & $routes) {'."\n";
         $routerCode.= $this->recursiveGenerate($routeTree, '')."\n".'}';
 
