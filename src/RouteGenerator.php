@@ -116,11 +116,11 @@ class RouteGenerator
             // Try to find standard controllers
             switch (strtolower($method)) {
                 case GenericInterface::CTR_UNI: // Add generic controller action
-                    $universalRoute = new Route($prefix . '/*', array($module, $method), $module->id . GenericInterface::CTR_UNI);
+                    $universalRoute = new Route($prefix . '/{parameters:.*}', array($module, $method), $module->id . GenericInterface::CTR_UNI);
                     //trace($this->buildMethodParameters($module, $method), 1);
                     break;
                 case GenericInterface::CTR_BASE: // Add base controller action
-                    $baseRoute = new Route($prefix . '/?', array($module, $method), $module->id . GenericInterface::CTR_BASE);
+                    $baseRoute = new Route($prefix . '/{parameters:.*}', array($module, $method), $module->id . GenericInterface::CTR_BASE);
                     break;
                 case GenericInterface::CTR_POST:// not implemented
                 case GenericInterface::CTR_PUT:// not implemented
@@ -174,7 +174,7 @@ class RouteGenerator
             // Bind its pattern to universal controller callback
             $routes->add(
                 new Route(
-                    $prefix . '/?',
+                    $prefix . '/{parameters:.*}',
                     $universalRoute->callback,
                     $module->id . GenericInterface::CTR_BASE
                 )

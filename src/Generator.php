@@ -27,15 +27,17 @@ class Generator
             // Split pattern
             foreach (explode('/', $route->pattern) as $routePart) {
                 // Remove empty parts
-                if (isset($routePart{1})) {
+                if (isset($routePart{0})) {
                     $map[] = '["' . $routePart . '"]';
                 }
             }
             $treeArray = sizeof($map) ? implode('', $map) : '["'.$route->pattern.'"]';
-            //elapsed('$routeTree' . $treeArray . '= $route->identifier;',1);
+            //trace($map,1);
+            //elapsed($route->pattern.' -> $routeTree' . $treeArray . '= $route->identifier;',1);
             eval('$routeTree' . $treeArray . '= $route->identifier;');
-
         }
+
+        //trace($routeTree,1);
 
         // Wrap routing logic into function to support returns
         $routerCode = 'function __router($path, & $routes) {'."\n";
@@ -68,7 +70,8 @@ class Generator
             $code .= $tabs . '// ' . $newPath . "\n";
 
             // Count indexes
-            $stIndex = strlen($path) + 1;
+            $stLength = strlen($path);
+            $stIndex = $stLength + 1;
             $length = strlen($placeholder);
 
             // Check if placeholder is a route variable
@@ -78,10 +81,12 @@ class Generator
 
                 // Generate parameter route parsing, logic is that parameter can have any length so we
                 // limit it either by closest brace(}) to the right or to the end of the string
-                $code .= $tabs . 'if (preg_match("/(?<' . $matches['name'] . '>'.$filter.'+)/i", substr($path, ' . $stIndex . ',  strpos($path, "/", ' . $stIndex . ') ? strlen($path) - strpos($path, "/", ' . $stIndex . ') : 0), $matches)) {' . "\n";
+                $code .= $tabs . 'if (preg_match("/(?<' . $matches['name'] . '>'.$filter.')/i", substr($path, ' . $stIndex . ',  strpos($path, "/", ' . $stLength . ') ? strlen($path) - strpos($path, "/", ' . $stLength . ') : 0), $matches)) {' . "\n";
 
                 // When we have route parameter we do not split logic tree as different parameters can match
                 $conditionStarted = false;
+            } else if(false) {
+
             } else { // Generate route placeholder comparison
                 $code .= $tabs . ($conditionStarted ? 'else ' : '') . 'if (substr($path, ' . $stIndex . ', ' . $length . ') === "' . $placeholder . '" ) {' . "\n";
 
