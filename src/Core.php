@@ -26,15 +26,26 @@ class Core
      */
     public function router(\samson\core\Core & $core, & $result, & $path, $default, $async = false)
     {
+        //elapsed('Start routing');
         // Create SamsonPHP routing table from loaded modules
         $rg = new RouteGenerator($core->module_stack, $default);
 
-        if (($route = $rg->routes()->match($path)) !== false) {
+        //elapsed('Created routes');
+
+        $generator = new Generator();
+        $routerLogic = $generator->generate($rg->routes());
+        file_put_contents(s()->path().'www/cache/routing.cache.php', '<?php '.$routerLogic);
+        eval($routerLogic);
+        //elapsed('Created routing logic');
+
+
+        if (($route = __router($path, $rg->routes())) !== false) {
+            //elapsed('Found route');
 
             // Get object from callback & set it as current active core module
             $core->active($route->callback[0]);
 
-            //trace($route->pattern, 1);
+            trace($route->pattern, 1);
 
             // Route parameters
             $parameters = array();
@@ -92,5 +103,8 @@ class Core
             // Stop candidate search
             $result = !isset($result) ? A_SUCCESS : $result;
         }
+
+        //elapsed('Finished routing');
     }
+
 }

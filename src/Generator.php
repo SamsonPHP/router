@@ -18,23 +18,27 @@ class Generator
      * @param RouteCollection $routesCollection Routes collection for generating routing logic function
      * @return string PHP code for routing logic
      */
-    public function generate(RouteCollection & $routesCollection)
+    public function generate(RouteCollection $routesCollection)
     {
-        // Build multi-dimentional route array-tree
+        // Build multi-dimensional route array-tree
         $routeTree = array();
         foreach ($routesCollection as $route) {
             $map = array();
+            // Split pattern
             foreach (explode('/', $route->pattern) as $routePart) {
                 // Remove empty parts
-                if (isset($routePart{0})) {
+                if (isset($routePart{1})) {
                     $map[] = '["' . $routePart . '"]';
                 }
             }
-            eval('$routeTree'.implode('', $map).'= $route->identifier;');
+            $treeArray = sizeof($map) ? implode('', $map) : '["'.$route->pattern.'"]';
+            //elapsed('$routeTree' . $treeArray . '= $route->identifier;',1);
+            eval('$routeTree' . $treeArray . '= $route->identifier;');
+
         }
 
         // Wrap routing logic into function to support returns
-        $routerCode = 'function __router($path, array & $routes) {'."\n";
+        $routerCode = 'function __router($path, & $routes) {'."\n";
         $routerCode.= $this->recursiveGenerate($routeTree, '')."\n".'}';
 
         return $routerCode;
@@ -87,7 +91,7 @@ class Generator
 
             // This is route end - call handler
             if (is_string($data)) {
-                $code .= $tabs . '     return $routes["' . $data . '"]->callback;' . "\n";
+                $code .= $tabs . '     return $routes["' . $data . '"];' . "\n";
             } else { // Go deeper in recursion
                 $this->recursiveGenerate($data, $newPath, $code, $level + 5);
             }
