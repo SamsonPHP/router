@@ -39,16 +39,18 @@ class Core
         //elapsed('Created routing logic');
 
 
-        if (($route = __router($path, $rg->routes())) !== false) {
+        if (is_array($routeData = __router($path, $rg->routes()))) {
             //elapsed('Found route');
+            $route = $routeData[0];
+            // Route parameters
+            $parameters = $routeData[1];
+            trace($parameters,1);
+            trace($route,1);
 
             // Get object from callback & set it as current active core module
             $core->active($route->callback[0]);
 
-            trace($route->pattern, 1);
-
-            // Route parameters
-            $parameters = array();
+            //trace($route->pattern, 1);
 
             // Check if request has special asynchronous markers
             if ($_SERVER['HTTP_ACCEPT'] == '*/*' || isset($_SERVER['HTTP_SJSASYNC']) || isset($_POST['SJSASYNC'])) {

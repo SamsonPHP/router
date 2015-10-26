@@ -85,8 +85,6 @@ class Generator
 
                 // When we have route parameter we do not split logic tree as different parameters can match
                 $conditionStarted = false;
-            } else if(false) {
-
             } else { // Generate route placeholder comparison
                 $code .= $tabs . ($conditionStarted ? 'else ' : '') . 'if (substr($path, ' . $stIndex . ', ' . $length . ') === "' . $placeholder . '" ) {' . "\n";
 
@@ -96,7 +94,7 @@ class Generator
 
             // This is route end - call handler
             if (is_string($data)) {
-                $code .= $tabs . '     return $routes["' . $data . '"];' . "\n";
+                $code .= $tabs . '     return array($routes["' . $data . '"], $matches);' . "\n";
             } else { // Go deeper in recursion
                 $this->recursiveGenerate($data, $newPath, $code, $level + 5);
             }

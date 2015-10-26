@@ -81,6 +81,14 @@ class Route
         $this->identifier = isset($identifier) ? $identifier : uniqid('route');
         // Compile to regexp
         $this->regexpPattern = $this->internalToRegExp($this->pattern);
+
+        // Parse callback signature and get parameters list
+        if (is_callable($callback)) {
+            $reflectionMethod = is_array($callback) ? new \ReflectionMethod($callback[0], $callback[1]) : new \ReflectionFunction($callback);
+            foreach ($reflectionMethod->getParameters() as $parameter) {
+                $this->parameters[] = $parameter->getName();
+            }
+        }
     }
 
     /**
