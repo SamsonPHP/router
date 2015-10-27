@@ -90,7 +90,7 @@ class Core
         // Get HTTP request method
         $method = $_SERVER['REQUEST_METHOD'];
         // Prepend HTTP request type, true - asynchronous
-        $method = ($async ? GenericInterface::ASYNC_PREFIX : '').$method;
+        $method = ($async ? GenericRouteGenerator::ASYNC_PREFIX : '').$method;
 
         // Create SamsonPHP routing table from loaded modules
         $rg = new GenericRouteGenerator($core->module_stack, $default);

@@ -13,6 +13,41 @@ namespace samsonphp\router;
  */
 class GenericRouteGenerator implements RouteGeneratorInterface
 {
+    /** Default controller name */
+    const CTR_BASE = '__base';
+    const CTR_CACHE_BASE = '__cache_base';
+
+    /** Universal controller name */
+    const CTR_UNI = '__handler';
+    const CTR_CACHE_UNI = '__cache_handler';
+
+    /** Post controller name */
+    const CTR_POST = '__post';
+    const CTR_CACHE_POST = '__cache_post';
+
+    /** Put controller name */
+    const CTR_PUT = '__put';
+    const CTR_CACHE_PUT = '__cache_put';
+
+    /** Delete controller name */
+    const CTR_DELETE = '__delete';
+    const CTR_CACHE_DELETE = '__cache_delete';
+
+    /** Delete controller name */
+    const CTR_UPDATE = '__update';
+    const CTR_CACHE_UPDATE = '__cache_update';
+
+    /** Controllers naming conventions */
+
+    /** Procedural controller prefix */
+    const PROC_PREFIX = '_';
+    /** OOP controller prefix */
+    const OBJ_PREFIX = '__';
+    /** AJAX controller prefix */
+    const ASYNC_PREFIX = 'async_';
+    /** CACHE controller prefix */
+    const CACHE_PREFIX = 'cache_';
+    
     /** @var RouteCollection Generated routes collection */
     protected $routes;
 
@@ -93,7 +128,7 @@ class GenericRouteGenerator implements RouteGeneratorInterface
         if (is_callable($callback)) {
             return $callback;
         } else if (isset($modules[$callback])) {
-            return array($modules[$callback], GenericInterface::CTR_UNI);
+            return array($modules[$callback], self::CTR_UNI);
         }
     }
 
@@ -116,16 +151,16 @@ class GenericRouteGenerator implements RouteGeneratorInterface
             $prefix = '/' . $module->id;
             // Try to find standard controllers
             switch (strtolower($method)) {
-                case GenericInterface::CTR_UNI: // Add generic controller action
-                    $universalRoute = new Route($prefix . '/{parameters:.*}', array($module, $method), $module->id . GenericInterface::CTR_UNI);
+                case self::CTR_UNI: // Add generic controller action
+                    $universalRoute = new Route($prefix . '/{parameters:.*}', array($module, $method), $module->id . self::CTR_UNI);
                     //trace($this->buildMethodParameters($module, $method), 1);
                     break;
-                case GenericInterface::CTR_BASE: // Add base controller action
-                    $baseRoute = new Route($prefix . '/{parameters:.*}', array($module, $method), $module->id . GenericInterface::CTR_BASE);
+                case self::CTR_BASE: // Add base controller action
+                    $baseRoute = new Route($prefix . '/{parameters:.*}', array($module, $method), $module->id . self::CTR_BASE);
                     break;
-                case GenericInterface::CTR_POST:// not implemented
-                case GenericInterface::CTR_PUT:// not implemented
-                case GenericInterface::CTR_DELETE:// not implemented
+                case self::CTR_POST:// not implemented
+                case self::CTR_PUT:// not implemented
+                case self::CTR_DELETE:// not implemented
                     break;
 
                 // Ignore magic methods
@@ -141,7 +176,7 @@ class GenericRouteGenerator implements RouteGeneratorInterface
                 // This is not special controller action
                 default:
                     // Match controller action OOP pattern
-                    if (preg_match('/^' . GenericInterface::OBJ_PREFIX . '(?<async_>async_)?(?<cache_>cache_)?(?<action>.+)/i', $method, $matches)) {
+                    if (preg_match('/^' . self::OBJ_PREFIX . '(?<async_>async_)?(?<cache_>cache_)?(?<action>.+)/i', $method, $matches)) {
                         // Build controller action pattern
                         $pattern = $prefix . '/' . $matches['action'] . '/' . $this->buildMethodParameters($module, $method);
 
@@ -153,7 +188,7 @@ class GenericRouteGenerator implements RouteGeneratorInterface
                                     $pattern,
                                     array($module, $method), // Route callback
                                     $module->id . $httpMethod .'_'.$method, // Route identifier
-                                    $matches[GenericInterface::ASYNC_PREFIX].$httpMethod // Prepend async prefix to method
+                                    $matches[self::ASYNC_PREFIX].$httpMethod // Prepend async prefix to method
                                 )
                             );
                         }
@@ -176,7 +211,7 @@ class GenericRouteGenerator implements RouteGeneratorInterface
                 new Route(
                     $prefix . '/{parameters:.*}',
                     $universalRoute->callback,
-                    $module->id . GenericInterface::CTR_BASE
+                    $module->id . self::CTR_BASE
                 )
             );
         }
