@@ -22,21 +22,20 @@ class Route
     const METHOD_DELETE = 'DELETE';
     const METHOD_UPDATE = 'UPDATE';
 
-    /** Route method type */
-    const TYPE_SYNC = 'SYNC';
-    const TYPE_ASYNC = 'ASYNC';
+    /** @var array Collection of all supported HTTP methods */
+    public static $METHODS = array(
+        self::METHOD_GET,
+        self::METHOD_POST,
+        self::METHOD_PUT,
+        self::METHOD_DELETE,
+        self::METHOD_UPDATE
+    );
 
     /** @var string Route identifier */
     public $identifier;
 
     /** @var string HTTP method supported */
     public $method = self::METHOD_ANY;
-
-    /** @var boolean Flag that only synchronous HTTP requests are supported */
-    public $async = false;
-
-    /** @var boolean Flag that this route should be cached */
-    public $cache = false;
 
     /** @var string Internal pattern for matching */
     public $pattern;
@@ -51,22 +50,6 @@ class Route
     public $callback;
 
     /**
-     * Create route from array
-     * @param string $pattern
-     * @param array $data
-     * @return Route New Route object instance
-     * @throws ArrayToObjectConversion
-     */
-    public static function fromArray($pattern, array $data)
-    {
-        if (sizeof($data) >= 4) {
-            return new self($pattern, $data[0], $data[1], isset($data[4]) ? $data[4] : self::METHOD_ANY, $data[2], $data[3]);
-        }
-
-        throw new ArrayToObjectConversion();
-    }
-
-    /**
      * @param string $pattern Route matching pattern
      * @param callable $callback Callback for route
      * @param string|null $identifier Route unique identifier, if empty - unique will be generated
@@ -74,13 +57,11 @@ class Route
      * @param bool|false $async Route asynchronous flag
      * @param bool|false $cache Route caching flag
      */
-    public function __construct($pattern, $callback, $identifier = null, $method = self::METHOD_ANY, $async = false, $cache = false)
+    public function __construct($pattern, $callback, $identifier = null, $method = self::METHOD_ANY)
     {
         $this->pattern = $pattern;
         $this->callback = $callback;
         $this->method = $method;
-        $this->async = $async;
-        $this->cache = $cache;
         // Every route should have an identifier otherwise create unique
         $this->identifier = isset($identifier) ? $identifier : uniqid('route');
         // Compile to regexp

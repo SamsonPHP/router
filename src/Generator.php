@@ -32,22 +32,19 @@ class Generator
                 }
             }
 
-            // Convert to string route type to save in array
-            $type = $route->async ? Route::TYPE_ASYNC : Route::TYPE_SYNC;
-
             // Build array tree parameters from route pattern for building array structure
             $treeArray = sizeof($map) ? implode('', $map) : '["' . $route->pattern . '"]';
 
-            //elapsed($type.'-'.$route->pattern.' -> $routeTree' . $treeArray . '= $route->identifier;',1);
+            //elapsed($route->pattern.' -> $routeTree' . $treeArray . '= $route->identifier;',1);
 
-            if ($route->method !== Route::METHOD_ANY) {// Build dynamic array-tree structure for specific method
-                eval('$routeTree["' . $type . '"]["' . $route->method . '"]' . $treeArray . '= $route->identifier;');
+            if (strpos($route->method, Route::METHOD_ANY) === false) {// Build dynamic array-tree structure for specific method
+                eval('$routeTree["' . $route->method . '"]' . $treeArray . '= $route->identifier;');
             } else {// Build dynamic array-tree structure for all methods
-                eval('$routeTree["' . $type . '"]["' . Route::METHOD_GET . '"]' . $treeArray . '= $route->identifier;');
-                eval('$routeTree["' . $type . '"]["' . Route::METHOD_POST . '"]' . $treeArray . '= $route->identifier;');
-                eval('$routeTree["' . $type . '"]["' . Route::METHOD_UPDATE . '"]' . $treeArray . '= $route->identifier;');
-                eval('$routeTree["' . $type . '"]["' . Route::METHOD_DELETE . '"]' . $treeArray . '= $route->identifier;');
-                eval('$routeTree["' . $type . '"]["' . Route::METHOD_PUT . '"]' . $treeArray . '= $route->identifier;');
+                eval('$routeTree["' . Route::METHOD_GET . '"]' . $treeArray . '= $route->identifier;');
+                eval('$routeTree["' . Route::METHOD_POST . '"]' . $treeArray . '= $route->identifier;');
+                eval('$routeTree["' . Route::METHOD_UPDATE . '"]' . $treeArray . '= $route->identifier;');
+                eval('$routeTree["' . Route::METHOD_DELETE . '"]' . $treeArray . '= $route->identifier;');
+                eval('$routeTree["' . Route::METHOD_PUT . '"]' . $treeArray . '= $route->identifier;');
             }
         }
 
@@ -55,15 +52,11 @@ class Generator
          * Iterate found route types and create appropriate router logic function
          * for each route type/method key using specific $routeTree branch
          */
-        $routerCallerCode = 'function __router($path, & $routes, $type, $method){' . "\n";
+        $routerCallerCode = 'function __router($path, & $routes, $method){' . "\n";
         $routerCallerCode .= '$matches = array();' . "\n";
-        foreach ($routeTree as $routerType => $routerMethods) {
-            $routerCallerCode .= 'if ($type === "' . $routerType . '") {' . "\n";
-            foreach ($routerMethods as $routeMethod => $routes) {
-                $routerCallerCode .= 'if ($method === "' . $routeMethod . '") {' . "\n";
-                $routerCallerCode .= $this->recursiveGenerate($routeTree[$routerType][$routeMethod], '') . "\n";
-                $routerCallerCode .= '}' . "\n";
-            }
+        foreach ($routeTree as $routeMethod => $routes) {
+            $routerCallerCode .= 'if ($method === "' . $routeMethod . '") {' . "\n";
+            $routerCallerCode .= $this->recursiveGenerate($routeTree[$routeMethod], '') . "\n";
             $routerCallerCode .= '}' . "\n";
         }
 

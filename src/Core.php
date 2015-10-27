@@ -6,6 +6,7 @@
  * Time: 16:20
  */
 namespace samsonphp\router;
+use samsonphp\router\exception\FailedLogicCreation;
 use samsonphp\router\exception\NoMatchFound;
 
 /**
@@ -18,6 +19,63 @@ class Core
     protected $routes = array();
 
     /**
+     * Define if HTTP request is asynchronous
+     * @return bool True if request is asynchronous
+     */
+    protected function isAsynchronousRequest()
+    {
+        return $_SERVER['HTTP_ACCEPT'] == '*/*' || isset($_SERVER['HTTP_SJSASYNC']) || isset($_POST['SJSASYNC']);
+    }
+
+    /**
+     * Dispatch HTTP request
+     * @param $path
+     * @param $routes
+     * @param $type
+     * @param $method
+     * @param null $route
+     * @return bool|mixed
+     * @throws FailedLogicCreation
+     */
+    protected function dispatch($path, &$routes, $method, &$route = null)
+    {
+        //elapsed('Started dispatching routes');
+
+        // Create routing logic generator
+        $generator = new Generator();
+
+        // Generate routing logic from routes
+        $routerLogic = $generator->generate($routes);
+
+        file_put_contents(s()->path() . 'www/cache/routing.cache.php', '<?php ' . $routerLogic);
+        //elapsed('Created routing logic');
+
+        // Evaluate routing logic function
+        eval($routerLogic);
+        if (function_exists('__router')) {
+            // Perform routing logic
+            if (is_array($routeData = __router($path, $routes, $method))) {
+                //elapsed('Found route');
+                /** @var Route $route Retrieve found Route object */
+                $route = $routeData[0];
+
+                // Gather parsed route parameters in correct order
+                $parameters = array();
+                foreach ($route->parameters as $index => $name) {
+                    $parameters[] = &$routeData[1][$name];
+                }
+
+                // Perform route callback action
+                $result = is_callable($route->callback) ? call_user_func_array($route->callback, $parameters) : false;
+
+                return isset($result) ? $result : true;
+            }
+        }
+
+        throw new FailedLogicCreation();
+    }
+
+    /**
      * SamsonPHP core.routing event handler
      *
      * @param \samson\core\Core $core Pointer to core object
@@ -27,51 +85,26 @@ class Core
     public function router(\samson\core\Core & $core, & $result, & $path, $default, $async = false)
     {
         //elapsed('Start routing');
+        $async = $this->isAsynchronousRequest();
+
+        // Get HTTP request method
+        $method = $_SERVER['REQUEST_METHOD'];
+        // Prepend HTTP request type, true - asynchronous
+        $method = ($async ? GenericInterface::ASYNC_PREFIX : '').$method;
+
         // Create SamsonPHP routing table from loaded modules
         $rg = new RouteGenerator($core->module_stack, $default);
 
         //elapsed('Created routes');
 
-        $generator = new Generator();
-        $routerLogic = $generator->generate($rg->routes());
-        file_put_contents(s()->path() . 'www/cache/routing.cache.php', '<?php ' . $routerLogic);
-        eval($routerLogic);
-        //elapsed('Created routing logic');
-
-        // Get HTTP request method
-        $method = $_SERVER['REQUEST_METHOD'];
-        // Get HTTP request type, true - asynchronous
-        $type = $_SERVER['HTTP_ACCEPT'] == '*/*' || isset($_SERVER['HTTP_SJSASYNC']) || isset($_POST['SJSASYNC']) ? Route::TYPE_ASYNC : Route::TYPE_SYNC;
-
-        //trace($type, 1);
-        // Perform routing logic
-        if (is_array($routeData = __router($path, $rg->routes(), $type, $method))) {
-            //elapsed('Found route');
-            $route = $routeData[0];
-            // Route parameters
-            $parameters = array();
-
-            // Gather parameters in correct order
-            foreach ($route->parameters as $index => $name) {
-                $parameters[] = &$routeData[1][$name];
-            }
-
-            // Perform controller action
-            $result = is_callable($route->callback) ? call_user_func_array($route->callback, $parameters) : A_FAILED;
-
-            //trace($route, 1);
-            //trace($parameters, 1);
-
+        /** @var Route $route Found route object */
+        $route = null;
+        if ($this->dispatch($path, $rg->routes(), $method, $route)) {
             // Get object from callback & set it as current active core module
             $core->active($route->callback[0]);
 
-            // If this route needs caching
-            if ($route->cache) {
-                $core->cached();
-            }
-
             // If this route is asynchronous
-            if ($route->async) {
+            if ($async) {
                 // Set async response
                 $core->async(true);
 
@@ -91,7 +124,6 @@ class Core
             // Stop candidate search
             $result = !isset($result) ? true : $result;
         }
-
         //elapsed('Finished routing');
     }
 }

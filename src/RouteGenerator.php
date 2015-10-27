@@ -142,23 +142,20 @@ class RouteGenerator
                     // Match controller action OOP pattern
                     if (preg_match('/^' . GenericInterface::OBJ_PREFIX . '(?<async_>async_)?(?<cache_>cache_)?(?<action>.+)/i', $method, $matches)) {
                         // Build controller action pattern
-                        $pattern = $prefix . '/' . $matches['action'].'/'.$this->buildMethodParameters($module, $method);
+                        $pattern = $prefix . '/' . $matches['action'] . '/' . $this->buildMethodParameters($module, $method);
 
-                        //trace($pattern, 1);
-
-                        // Add route for this controller action
-                        $routes->add(
-                            new Route(
-                                $pattern,
-                                array($module, $method), // Route callback
-                                $module->id . $method, // Route identifier
-                                Route::METHOD_ANY,
-                                $matches[GenericInterface::ASYNC_PREFIX] == GenericInterface::ASYNC_PREFIX ? true : false,
-                                $matches[GenericInterface::CACHE_PREFIX] == GenericInterface::CACHE_PREFIX ? true : false
-                            )
-                        );
-
-                        //trace($method.'-'.($matches[GenericInterface::ASYNC_PREFIX] == GenericInterface::ASYNC_PREFIX),1);
+                        // Add SamsonPHP specific async method
+                        foreach (Route::$METHODS as $httpMethod) {
+                            // Add route for this controller action
+                            $routes->add(
+                                new Route(
+                                    $pattern,
+                                    array($module, $method), // Route callback
+                                    $module->id . $httpMethod .'_'.$method, // Route identifier
+                                    $matches[GenericInterface::ASYNC_PREFIX].$httpMethod // Prepend async prefix to method
+                                )
+                            );
+                        }
                     }
             }
         }
