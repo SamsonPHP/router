@@ -37,7 +37,7 @@ class Core
      * @return bool|mixed
      * @throws FailedLogicCreation
      */
-    protected function dispatch($path, &$routes, $method, &$route = null)
+    protected function dispatch($path, $method, &$route = null)
     {
         //elapsed('Started dispatching routes');
 
@@ -45,16 +45,16 @@ class Core
         $generator = new Generator();
 
         // Generate routing logic from routes
-        $routerLogic = $generator->generate($routes);
+        $routerLogic = $generator->generate($this->routes);
 
-        file_put_contents(s()->path() . 'www/cache/routing.cache.php', '<?php ' . $routerLogic);
+        //file_put_contents(s()->path() . 'www/cache/routing.cache.php', '<?php ' . $routerLogic);
         //elapsed('Created routing logic');
 
         // Evaluate routing logic function
         eval($routerLogic);
         if (function_exists('__router')) {
             // Perform routing logic
-            if (is_array($routeData = __router($path, $routes, $method))) {
+            if (is_array($routeData = __router($path, $this->routes, $method))) {
                 //elapsed('Found route');
                 /** @var Route $route Retrieve found Route object */
                 $route = $routeData[0];
@@ -94,12 +94,13 @@ class Core
 
         // Create SamsonPHP routing table from loaded modules
         $rg = new RouteGenerator($core->module_stack, $default);
+        $this->routes = $rg->routes();
 
         //elapsed('Created routes');
 
         /** @var Route $route Found route object */
         $route = null;
-        if ($this->dispatch($path, $rg->routes(), $method, $route)) {
+        if ($this->dispatch($path, $method, $route)) {
             // Get object from callback & set it as current active core module
             $core->active($route->callback[0]);
 
