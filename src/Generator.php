@@ -33,12 +33,22 @@ class Generator
             }
 
             // Convert to string route type to save in array
-            $type = $route->async?'ASYNC':'SYNC';
+            $type = $route->async?Route::TYPE_ASYNC:Route::TYPE_ASYNC;
 
             // Build array tree parameters from route pattern for building array structure
             $treeArray = sizeof($map) ? implode('', $map) : '["'.$route->pattern.'"]';
 
             //elapsed($route->pattern.' -> $routeTree' . $treeArray . '= $route->identifier;',1);
+
+            if ($route->method !== Route::METHOD_ANY)  {// Build dynamic array-tree structure for specific method
+                eval('$routeTree["'.$type.'"]["'.$route->method.'"]' . $treeArray . '= $route->identifier;');
+            } else {// Build dynamic array-tree structure for all methods
+                eval('$routeTree["'.$type.'"]["'.Route::METHOD_GET.'"]' . $treeArray . '= $route->identifier;');
+                eval('$routeTree["'.$type.'"]["'.Route::METHOD_POST.'"]' . $treeArray . '= $route->identifier;');
+                eval('$routeTree["'.$type.'"]["'.Route::METHOD_UPDATE.'"]' . $treeArray . '= $route->identifier;');
+                eval('$routeTree["'.$type.'"]["'.Route::METHOD_DELETE.'"]' . $treeArray . '= $route->identifier;');
+                eval('$routeTree["'.$type.'"]["'.Route::METHOD_PUT.'"]' . $treeArray . '= $route->identifier;');
+            }
 
             // Build dynamic array-tree structure
             eval('$routeTree["'.$type.'"]["'.$route->method.'"]' . $treeArray . '= $route->identifier;');

@@ -22,6 +22,10 @@ class Route
     const METHOD_DELETE = 'DELETE';
     const METHOD_UPDATE = 'UPDATE';
 
+    /** Route method type */
+    const TYPE_SYNC = 'SYNC';
+    const TYPE_ASYNC = 'ASYNC';
+
     /** @var string Route identifier */
     public $identifier;
 
