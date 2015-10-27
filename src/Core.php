@@ -41,8 +41,9 @@ class Core
         // Get HTTP request method
         $method = $_SERVER['REQUEST_METHOD'];
         // Get HTTP request type, true - asynchronous
-        $type = $_SERVER['HTTP_ACCEPT'] == '*/*' || isset($_SERVER['HTTP_SJSASYNC']) || isset($_POST['SJSASYNC']) ? 'ASYNC' : 'SYNC';
+        $type = $_SERVER['HTTP_ACCEPT'] == '*/*' || isset($_SERVER['HTTP_SJSASYNC']) || isset($_POST['SJSASYNC']) ? Route::TYPE_ASYNC : Route::TYPE_SYNC;
 
+        //trace($type, 1);
         // Perform routing logic
         if (is_array($routeData = __router($path, $rg->routes(), $type, $method))) {
             //elapsed('Found route');
@@ -58,8 +59,8 @@ class Core
             // Perform controller action
             $result = is_callable($route->callback) ? call_user_func_array($route->callback, $parameters) : A_FAILED;
 
-            trace($route, 1);
-            trace($parameters, 1);
+            //trace($route, 1);
+            //trace($parameters, 1);
 
             // Get object from callback & set it as current active core module
             $core->active($route->callback[0]);

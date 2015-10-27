@@ -33,44 +33,41 @@ class Generator
             }
 
             // Convert to string route type to save in array
-            $type = $route->async?Route::TYPE_ASYNC:Route::TYPE_ASYNC;
+            $type = $route->async ? Route::TYPE_ASYNC : Route::TYPE_SYNC;
 
             // Build array tree parameters from route pattern for building array structure
-            $treeArray = sizeof($map) ? implode('', $map) : '["'.$route->pattern.'"]';
+            $treeArray = sizeof($map) ? implode('', $map) : '["' . $route->pattern . '"]';
 
-            //elapsed($route->pattern.' -> $routeTree' . $treeArray . '= $route->identifier;',1);
+            //elapsed($type.'-'.$route->pattern.' -> $routeTree' . $treeArray . '= $route->identifier;',1);
 
-            if ($route->method !== Route::METHOD_ANY)  {// Build dynamic array-tree structure for specific method
-                eval('$routeTree["'.$type.'"]["'.$route->method.'"]' . $treeArray . '= $route->identifier;');
+            if ($route->method !== Route::METHOD_ANY) {// Build dynamic array-tree structure for specific method
+                eval('$routeTree["' . $type . '"]["' . $route->method . '"]' . $treeArray . '= $route->identifier;');
             } else {// Build dynamic array-tree structure for all methods
-                eval('$routeTree["'.$type.'"]["'.Route::METHOD_GET.'"]' . $treeArray . '= $route->identifier;');
-                eval('$routeTree["'.$type.'"]["'.Route::METHOD_POST.'"]' . $treeArray . '= $route->identifier;');
-                eval('$routeTree["'.$type.'"]["'.Route::METHOD_UPDATE.'"]' . $treeArray . '= $route->identifier;');
-                eval('$routeTree["'.$type.'"]["'.Route::METHOD_DELETE.'"]' . $treeArray . '= $route->identifier;');
-                eval('$routeTree["'.$type.'"]["'.Route::METHOD_PUT.'"]' . $treeArray . '= $route->identifier;');
+                eval('$routeTree["' . $type . '"]["' . Route::METHOD_GET . '"]' . $treeArray . '= $route->identifier;');
+                eval('$routeTree["' . $type . '"]["' . Route::METHOD_POST . '"]' . $treeArray . '= $route->identifier;');
+                eval('$routeTree["' . $type . '"]["' . Route::METHOD_UPDATE . '"]' . $treeArray . '= $route->identifier;');
+                eval('$routeTree["' . $type . '"]["' . Route::METHOD_DELETE . '"]' . $treeArray . '= $route->identifier;');
+                eval('$routeTree["' . $type . '"]["' . Route::METHOD_PUT . '"]' . $treeArray . '= $route->identifier;');
             }
-
-            // Build dynamic array-tree structure
-            eval('$routeTree["'.$type.'"]["'.$route->method.'"]' . $treeArray . '= $route->identifier;');
         }
 
         /**
          * Iterate found route types and create appropriate router logic function
          * for each route type/method key using specific $routeTree branch
          */
-        $routerCallerCode = 'function __router($path, & $routes, $type, $method){'."\n";
-        $routerCallerCode .= '$matches = array();'."\n";
+        $routerCallerCode = 'function __router($path, & $routes, $type, $method){' . "\n";
+        $routerCallerCode .= '$matches = array();' . "\n";
         foreach ($routeTree as $routerType => $routerMethods) {
-            $routerCallerCode .= 'if ($type === "'.$routerType.'") {'."\n";
+            $routerCallerCode .= 'if ($type === "' . $routerType . '") {' . "\n";
             foreach ($routerMethods as $routeMethod => $routes) {
-                $routerCallerCode .= 'if ($method === "'.$routeMethod.'") {'."\n";
+                $routerCallerCode .= 'if ($method === "' . $routeMethod . '") {' . "\n";
                 $routerCallerCode .= $this->recursiveGenerate($routeTree[$routerType][$routeMethod], '') . "\n";
                 $routerCallerCode .= '}' . "\n";
             }
             $routerCallerCode .= '}' . "\n";
         }
 
-        return $routerCallerCode.'}';
+        return $routerCallerCode . '}';
     }
 
     /**
@@ -108,13 +105,14 @@ class Generator
 
                 // Generate parameter route parsing, logic is that parameter can have any length so we
                 // limit it either by closest brace(}) to the right or to the end of the string
-                $code .= $tabs . 'if (preg_match("/(?<' . $matches['name'] . '>'.$filter.')/i", substr($path, ' . $stIndex . ',  strpos($path, "/", ' . $stLength . ') ? strlen($path) - strpos($path, "/", ' . $stLength . ') : 0), $matches)) {' . "\n";
+                $code .= $tabs . 'if (preg_match("/(?<' . $matches['name'] . '>' . $filter . ')/i", substr($path, ' . $stIndex . ',  strpos($path, "/", ' . $stLength . ') ? strlen($path) - strpos($path, "/", ' . $stLength . ') : 0), $matches)) {' . "\n";
 
+                //$code .= $tabs . 'trace("I am at ' . $path . '", 1);';
                 // When we have route parameter we do not split logic tree as different parameters can match
                 $conditionStarted = false;
             } else { // Generate route placeholder comparison
                 $code .= $tabs . ($conditionStarted ? 'else ' : '') . 'if (substr($path, ' . $stIndex . ', ' . $length . ') === "' . $placeholder . '" ) {' . "\n";
-
+                //$code .= $tabs . 'trace("I am at ' . $path . '", 1);';
                 // Flag that condition group has been started
                 $conditionStarted = true;
             }
