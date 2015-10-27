@@ -48,7 +48,7 @@ class Generator
          * Iterate found route types and create appropriate router logic function
          * for each route type/method key using specific $routeTree branch
          */
-        $routerCallerCode = 'function __route($path, & $routes, $type, $method){'."\n";
+        $routerCallerCode = 'function __router($path, & $routes, $type, $method){'."\n";
         $routerCallerCode .= '$matches = array();'."\n";
         foreach ($routeTree as $routerType => $routerMethods) {
             $routerCallerCode .= 'if ($type === "'.$routerType.'") {'."\n";
