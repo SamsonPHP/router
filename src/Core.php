@@ -47,7 +47,7 @@ class Core
         // Generate routing logic from routes
         $routerLogic = $generator->generate($this->routes);
 
-        //file_put_contents(s()->path() . 'www/cache/routing.cache.php', '<?php ' . $routerLogic);
+        file_put_contents(s()->path() . 'www/cache/routing.cache.php', '<?php ' . $routerLogic);
         //elapsed('Created routing logic');
 
         // Evaluate routing logic function
@@ -93,8 +93,8 @@ class Core
         $method = ($async ? GenericInterface::ASYNC_PREFIX : '').$method;
 
         // Create SamsonPHP routing table from loaded modules
-        $rg = new RouteGenerator($core->module_stack, $default);
-        $this->routes = $rg->routes();
+        $rg = new GenericRouteGenerator($core->module_stack, $default);
+        $this->routes = $rg->generate();
 
         //elapsed('Created routes');
 

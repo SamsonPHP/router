@@ -11,10 +11,13 @@ namespace samsonphp\router;
  * This class is needed to generate routes for old SamsonPHP modules
  * @package samsonphp\router
  */
-class RouteGenerator
+class GenericRouteGenerator implements RouteGeneratorInterface
 {
     /** @var RouteCollection Generated routes collection */
     protected $routes;
+
+    /** @var samsonos\core\Module[] Collection of SamsonPHP modules */
+    protected $modules;
 
     /**
      * @return RouteCollection Generated routes collection
@@ -26,7 +29,11 @@ class RouteGenerator
 
     public function __construct(array & $modules, $default)
     {
-        $this->routes = $this->loadRoutes($modules, $default);
+        $this->routes = new RouteCollection();
+
+        // Create default '/' route
+        $this->routes->add(new Route('/', $this->findGenericDefaultAction($modules, $default), 'main_page'));
+        $this->modules = & $modules;
     }
 
     /**
@@ -34,14 +41,9 @@ class RouteGenerator
      * @param string $prefix URL path prefix for loaded routes
      * @return array Collection of web-application routes
      */
-    public function & loadRoutes($modules, $default)
+    public function & generate()
     {
-        $routes = new RouteCollection();
-
-        // Create default '/' route
-        $routes->add(new Route('/', $this->findGenericDefaultAction($modules, $default), 'main_page'));
-
-        foreach ($modules as $moduleID => & $module) {
+        foreach ($this->modules as $moduleID => & $module) {
             if(is_subclass_of($module, __NAMESPACE__.'\RouteInterface')) {
                 // Try to get module routes using interface method
                 $moduleRoutes = $module->routes();
@@ -51,11 +53,11 @@ class RouteGenerator
                     $moduleRoutes = $this->createGenericRoutes($module);
                 }
 
-                $routes = $routes->merge($moduleRoutes);
+                $this->routes = $this->routes->merge($moduleRoutes);
             }
         }
 
-        return $routes;
+        return $this->routes;
     }
 
     /**
@@ -104,10 +106,9 @@ class RouteGenerator
     {
         /** @var RouteCollection $routes */
         $routes = new RouteCollection();
-
         /** @var Route $universalRoute */
         $universalRoute = null;
-        /** @var Rotue $baseRoute */
+        /** @var Route $baseRoute */
         $baseRoute = null;
 
         // Iterate class methods
