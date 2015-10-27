@@ -40,11 +40,9 @@ class Generator
             if (strpos($route->method, Route::METHOD_ANY) === false) {// Build dynamic array-tree structure for specific method
                 eval('$routeTree["' . $route->method . '"]' . $treeArray . '= $route->identifier;');
             } else {// Build dynamic array-tree structure for all methods
-                eval('$routeTree["' . Route::METHOD_GET . '"]' . $treeArray . '= $route->identifier;');
-                eval('$routeTree["' . Route::METHOD_POST . '"]' . $treeArray . '= $route->identifier;');
-                eval('$routeTree["' . Route::METHOD_UPDATE . '"]' . $treeArray . '= $route->identifier;');
-                eval('$routeTree["' . Route::METHOD_DELETE . '"]' . $treeArray . '= $route->identifier;');
-                eval('$routeTree["' . Route::METHOD_PUT . '"]' . $treeArray . '= $route->identifier;');
+                foreach (Route::$METHODS as $method) {
+                    eval('$routeTree["' . $method . '"]' . $treeArray . '= $route->identifier;');
+                }
             }
         }
 
