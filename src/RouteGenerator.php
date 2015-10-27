@@ -41,7 +41,7 @@ class RouteGenerator
         // Create default '/' route
         $routes->add(new Route('/', $this->findGenericDefaultAction($modules, $default), 'main_page'));
 
-        foreach ($modules as $moduleID => $module) {
+        foreach ($modules as $moduleID => & $module) {
             if(is_subclass_of($module, __NAMESPACE__.'\RouteInterface')) {
                 // Try to get module routes using interface method
                 $moduleRoutes = $module->routes();
@@ -100,7 +100,7 @@ class RouteGenerator
      * @param $module
      * @return array
      */
-    protected function createGenericRoutes($module)
+    protected function createGenericRoutes(& $module)
     {
         /** @var RouteCollection $routes */
         $routes = new RouteCollection();
@@ -151,12 +151,14 @@ class RouteGenerator
                             new Route(
                                 $pattern,
                                 array($module, $method), // Route callback
-                                $module->id . '_' . $method, // Route identifier
+                                $module->id . $method, // Route identifier
                                 Route::METHOD_ANY,
                                 $matches[GenericInterface::ASYNC_PREFIX] == GenericInterface::ASYNC_PREFIX ? true : false,
                                 $matches[GenericInterface::CACHE_PREFIX] == GenericInterface::CACHE_PREFIX ? true : false
                             )
                         );
+
+                        //trace($method.'-'.($matches[GenericInterface::ASYNC_PREFIX] == GenericInterface::ASYNC_PREFIX),1);
                     }
             }
         }

@@ -31,19 +31,36 @@ class Generator
                     $map[] = '["' . $routePart . '"]';
                 }
             }
+
+            // Convert to string route type to save in array
+            $type = $route->async?'ASYNC':'SYNC';
+
+            // Build array tree parameters from route pattern for building array structure
             $treeArray = sizeof($map) ? implode('', $map) : '["'.$route->pattern.'"]';
-            //trace($map,1);
+
             //elapsed($route->pattern.' -> $routeTree' . $treeArray . '= $route->identifier;',1);
-            eval('$routeTree' . $treeArray . '= $route->identifier;');
+
+            // Build dynamic array-tree structure
+            eval('$routeTree["'.$type.'"]["'.$route->method.'"]' . $treeArray . '= $route->identifier;');
         }
 
-        //trace($routeTree,1);
+        /**
+         * Iterate found route types and create appropriate router logic function
+         * for each route type/method key using specific $routeTree branch
+         */
+        $routerCallerCode = 'function __route($path, & $routes, $type, $method){'."\n";
+        $routerCallerCode .= '$matches = array();'."\n";
+        foreach ($routeTree as $routerType => $routerMethods) {
+            $routerCallerCode .= 'if ($type === "'.$routerType.'") {'."\n";
+            foreach ($routerMethods as $routeMethod => $routes) {
+                $routerCallerCode .= 'if ($method === "'.$routeMethod.'") {'."\n";
+                $routerCallerCode .= $this->recursiveGenerate($routeTree[$routerType][$routeMethod], '') . "\n";
+                $routerCallerCode .= '}' . "\n";
+            }
+            $routerCallerCode .= '}' . "\n";
+        }
 
-        // Wrap routing logic into function to support returns
-        $routerCode = 'function __router($path, & $routes) {'."\n";
-        $routerCode.= $this->recursiveGenerate($routeTree, '')."\n".'}';
-
-        return $routerCode;
+        return $routerCallerCode.'}';
     }
 
     /**

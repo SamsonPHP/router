@@ -43,9 +43,18 @@ class Core
             //elapsed('Found route');
             $route = $routeData[0];
             // Route parameters
-            $parameters = $routeData[1];
-            trace($parameters,1);
+            $parameters = array();
+
+            // Gather parameters in correct order
+            foreach ($route->parameters as $index => $name) {
+                $parameters[] = & $routeData[1][$name];
+            }
+
+            // Perform controller action
+            $result = is_callable($route->callback) ? call_user_func_array($route->callback, $parameters) : A_FAILED;
+
             trace($route,1);
+            trace($parameters, 1);
 
             // Get object from callback & set it as current active core module
             $core->active($route->callback[0]);
@@ -56,10 +65,6 @@ class Core
             if ($_SERVER['HTTP_ACCEPT'] == '*/*' || isset($_SERVER['HTTP_SJSASYNC']) || isset($_POST['SJSASYNC'])) {
                 // If this route is asynchronous
                 if ($route->async) {
-
-                    // Perform controller action
-                    $result = is_callable($route->callback) ? call_user_func_array($route->callback, $parameters) : A_FAILED;
-
                     // Anyway convert event result to array
                     if (!is_array($result)) $result = array($result);
 
@@ -90,10 +95,6 @@ class Core
                         return A_SUCCESS;
                     }
                 }
-
-            } else { // Synchronous controller
-                // Perform controller action
-                $result = is_callable($route->callback) ? call_user_func_array($route->callback, $parameters) : A_FAILED;
 
             }
 
