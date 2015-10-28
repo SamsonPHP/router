@@ -7,7 +7,6 @@
  */
 namespace samsonphp\router;
 use samsonphp\router\exception\FailedLogicCreation;
-use samsonphp\router\exception\NoMatchFound;
 
 /**
  * Main routing logic
@@ -15,7 +14,7 @@ use samsonphp\router\exception\NoMatchFound;
  */
 class Core
 {
-    /** @var array Collection of all application routes */
+    /** @var RouteCollection Collection of all application routes */
     protected $routes = array();
 
     /**
@@ -82,7 +81,7 @@ class Core
      * @param mixed $result Return value as routing result
      * @param string $default Default route path
      */
-    public function router(\samson\core\Core & $core, & $result, & $path, $default, $async = false)
+    public function router(\samson\core\Core & $core, & $result, & $path, $default)
     {
         //elapsed('Start routing');
         $async = $this->isAsynchronousRequest();
@@ -125,6 +124,9 @@ class Core
             // Stop candidate search
             $result = !isset($result) ? true : $result;
         }
+
+        // We could not dispatch route
+        return false;
         //elapsed('Finished routing');
     }
 }
