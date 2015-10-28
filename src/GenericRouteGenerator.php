@@ -7,6 +7,10 @@
  */
 namespace samsonphp\router;
 
+
+use \samsonframework\routing\RouteGeneratorInterface;
+use \samsonframework\routing\RouteCollection;
+use \samsonframework\routing\Route;
 /**
  * This class is needed to generate routes for old SamsonPHP modules
  * @package samsonphp\router
@@ -79,17 +83,16 @@ class GenericRouteGenerator implements RouteGeneratorInterface
     public function & generate()
     {
         foreach ($this->modules as $moduleID => & $module) {
-            if(is_subclass_of($module, __NAMESPACE__.'\RouteInterface')) {
-                // Try to get module routes using interface method
-                $moduleRoutes = $module->routes();
-                // There are no routes defined
-                if (!sizeof($moduleRoutes)) {
-                    // Generate generic routes
-                    $moduleRoutes = $this->createGenericRoutes($module);
-                }
+            // Try to get module routes using interface method
+            $moduleRoutes = method_exists($module, 'routes') ? $module->routes() : array();
 
-                $this->routes = $this->routes->merge($moduleRoutes);
+            // There are no routes defined
+            if (!sizeof($moduleRoutes)) {
+                // Generate generic routes
+                $moduleRoutes = $this->createGenericRoutes($module);
             }
+
+            $this->routes = $this->routes->merge($moduleRoutes);
         }
 
         return $this->routes;

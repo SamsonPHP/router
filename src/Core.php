@@ -29,8 +29,10 @@ class Core extends \samsonframework\routing\Core
      * @param mixed $result Return value as routing result
      * @param string $default Default route path
      */
-    public function router(\samson\core\Core & $core, & $result, & $path, $default)
+    public function router(\samson\core\Core & $core, & $result, $default)
     {
+        $path = $_SERVER['REQUEST_URI'];
+
         //elapsed('Start routing');
         $async = $this->isAsynchronousRequest();
 
