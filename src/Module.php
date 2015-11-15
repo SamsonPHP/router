@@ -15,11 +15,6 @@ class Module extends \samson\core\CompressableExternalModule
     /** @var Core Routing core */
     protected $core;
 
-    public function prepare()
-    {
-
-    }
-
     /**
      * Module initialization
      * @param array $params Initialization parameters collection
