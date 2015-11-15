@@ -55,7 +55,7 @@ class GenericRouteGenerator implements RouteGeneratorInterface
     /** @var RouteCollection Generated routes collection */
     protected $routes;
 
-    /** @var samsonos\core\Module[] Collection of SamsonPHP modules */
+    /** @var samson\core\Module[] Collection of SamsonPHP modules */
     protected $modules;
 
     /**
@@ -66,12 +66,15 @@ class GenericRouteGenerator implements RouteGeneratorInterface
         return $this->routes;
     }
 
-    public function __construct(array & $modules, $default)
+    /**
+     * GenericRouteGenerator constructor.
+     * @param Module[] $modules
+     * @param Route|null $default Defautl / route
+     */
+    public function __construct(array & $modules, Route $default = null)
     {
         $this->routes = new RouteCollection();
-
-        // Create default '/' route
-        $this->routes->add(new Route('/', $this->findGenericDefaultAction($modules, $default), 'main_page'));
+        $this->routes[] = $default;
         $this->modules = & $modules;
     }
 

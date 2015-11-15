@@ -1,5 +1,6 @@
 <?php
 namespace samsonphp\router;
+use samsonframework\routing\Route;
 
 /**
  * Created by PhpStorm.
@@ -26,6 +27,9 @@ class Module extends \samson\core\CompressableExternalModule
 
         // Subscribe to samsonphp\core routing event
         \samsonphp\event\Event::subscribe('core.routing', array($this->core, 'router'));
+
+        // Create default '/' route
+        $this->routes->add(new Route('/', $this->findGenericDefaultAction(s()->module_stack, $default), 'main_page'));
 
         // Create SamsonPHP routing table from loaded modules
         $rg = new GenericRouteGenerator(s()->module_stack, $default);

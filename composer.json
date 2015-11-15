@@ -12,6 +12,7 @@
     }
   ],
   "require": {
+    "samsonos/php_core":"*",
     "samsonframework/routing":"*"
   },
   "require-dev": {
