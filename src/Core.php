@@ -41,17 +41,16 @@ class Core extends \samsonframework\routing\Core
         // Prepend HTTP request type, true - asynchronous
         $method = ($async ? GenericRouteGenerator::ASYNC_PREFIX : '').$method;
 
-        // Create SamsonPHP routing table from loaded modules
-        $rg = new GenericRouteGenerator($core->module_stack, $default);
-        $this->routes = $rg->generate();
-
         //elapsed('Created routes');
 
         /** @var Route $route Found route object */
         $route = null;
         if ($this->dispatch($path, $method, $route)) {
+
             // Get object from callback & set it as current active core module
             $core->active($route->callback[0]);
+
+            file_put_contents(s()->path() . 'www/cache/routing.cache.php', '<?php ' . $this->routerLogic);
 
             // If this route is asynchronous
             if ($async) {

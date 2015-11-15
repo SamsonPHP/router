@@ -7,10 +7,10 @@
  */
 namespace samsonphp\router;
 
-
 use \samsonframework\routing\RouteGeneratorInterface;
 use \samsonframework\routing\RouteCollection;
 use \samsonframework\routing\Route;
+
 /**
  * This class is needed to generate routes for old SamsonPHP modules
  * @package samsonphp\router
@@ -190,7 +190,7 @@ class GenericRouteGenerator implements RouteGeneratorInterface
                                 new Route(
                                     $pattern,
                                     array($module, $method), // Route callback
-                                    $module->id . $httpMethod .'_'.$method, // Route identifier
+                                    $module->id . '_'.$httpMethod .'_'.$method, // Route identifier
                                     $matches[self::ASYNC_PREFIX].$httpMethod // Prepend async prefix to method
                                 )
                             );
