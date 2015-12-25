@@ -61,7 +61,7 @@ class GenericRouteGenerator implements RouteGeneratorInterface
     /**
      * @return RouteCollection Generated routes collection
      */
-    public function & routes()
+    public function &routes()
     {
         return $this->routes;
     }
@@ -74,16 +74,16 @@ class GenericRouteGenerator implements RouteGeneratorInterface
     public function __construct(array & $modules, Route $default = null)
     {
         $this->routes = new RouteCollection();
-        $this->routes[] = $default;
+        $this->routes->add($default);
         $this->modules = & $modules;
     }
 
     /**
      * Load all SamsonPHP web-application routes
      * @param string $prefix URL path prefix for loaded routes
-     * @return array Collection of web-application routes
+     * @return RouteCollection Collection of web-application routes
      */
-    public function & generate()
+    public function &generate()
     {
         foreach ($this->modules as $moduleID => & $module) {
             // Try to get module routes using interface method
@@ -120,22 +120,6 @@ class GenericRouteGenerator implements RouteGeneratorInterface
         }
 
         return implode('/', $pattern);
-    }
-
-    /**
-     * Old generic "main_page" route callback searcher to match old logic
-     * @param \samson\core\Core $core
-     * @param callable|string $callback
-     * @return array
-     *
-     */
-    public function findGenericDefaultAction($modules, $callback)
-    {
-        if (is_callable($callback)) {
-            return $callback;
-        } else if (isset($modules[$callback])) {
-            return array($modules[$callback], self::CTR_UNI);
-        }
     }
 
     /**

@@ -8,7 +8,9 @@
 namespace samsonphp\router;
 
 /**
- * Main routing logic
+ * Main routing logic core.
+ *
+ * @see samsonframework\routing\Core;
  * @package samsonphp\router
  */
 class Core extends \samsonframework\routing\Core
@@ -28,6 +30,7 @@ class Core extends \samsonframework\routing\Core
      * @param \samson\core\Core $core Pointer to core object
      * @param mixed $result Return value as routing result
      * @param string $default Default route path
+     * @return bool Routing result
      */
     public function router(\samson\core\Core & $core, & $result, $default)
     {
@@ -49,8 +52,6 @@ class Core extends \samsonframework\routing\Core
 
             // Get object from callback & set it as current active core module
             $core->active($route->callback[0]);
-
-            file_put_contents(s()->path() . 'www/cache/routing.cache.php', '<?php ' . $this->routerLogic);
 
             // If this route is asynchronous
             if ($async) {
