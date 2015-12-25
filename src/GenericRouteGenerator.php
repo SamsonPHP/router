@@ -51,11 +51,11 @@ class GenericRouteGenerator
     const ASYNC_PREFIX = 'async_';
     /** CACHE controller prefix */
     const CACHE_PREFIX = 'cache_';
-    
+
     /** @var RouteCollection Generated routes collection */
     protected $routes;
 
-    /** @var samson\core\Module[] Collection of SamsonPHP modules */
+    /** @var Object[] Collection of SamsonPHP modules */
     protected $modules;
 
     /**
@@ -73,12 +73,12 @@ class GenericRouteGenerator
     public function __construct(array & $modules)
     {
         $this->routes = new RouteCollection();
-        $this->modules = & $modules;
+        $this->modules = &$modules;
     }
 
     /**
-     * Load all SamsonPHP web-application routes
-     * @param string $prefix URL path prefix for loaded routes
+     * Load all SamsonPHP web-application routes.
+     *
      * @return RouteCollection Collection of web-application routes
      */
     public function &generate()
@@ -113,7 +113,7 @@ class GenericRouteGenerator
         $reflectionMethod = new \ReflectionMethod($object, $method);
         foreach ($reflectionMethod->getParameters() as $parameter) {
             // Build pattern markers
-            $pattern[] = '{'.$parameter->getName().'}';
+            $pattern[] = '{' . $parameter->getName() . '}';
             //trace($parameter->getDefaultValue(),1);
         }
 
@@ -121,11 +121,12 @@ class GenericRouteGenerator
     }
 
     /**
+     * Generate old-fashioned routes collection.
      *
-     * @param $module
+     * @param Object $module
      * @return array
      */
-    protected function createGenericRoutes(& $module)
+    protected function createGenericRoutes(&$module)
     {
         /** @var RouteCollection $routes */
         $routes = new RouteCollection();
@@ -144,7 +145,7 @@ class GenericRouteGenerator
                     //trace($this->buildMethodParameters($module, $method), 1);
                     break;
                 case self::CTR_BASE: // Add base controller action
-                    $baseRoute = new Route($prefix . '/{parameters:.*}', array($module, $method), $module->id . self::CTR_BASE);
+                    $baseRoute = new Route($prefix . '/', array($module, $method), $module->id . self::CTR_BASE);
                     break;
                 case self::CTR_POST:// not implemented
                 case self::CTR_PUT:// not implemented
@@ -175,8 +176,8 @@ class GenericRouteGenerator
                                 new Route(
                                     $pattern,
                                     array($module, $method), // Route callback
-                                    $module->id . '_'.$httpMethod .'_'.$method, // Route identifier
-                                    $matches[self::ASYNC_PREFIX].$httpMethod // Prepend async prefix to method
+                                    $module->id . '_' . $httpMethod . '_' . $method, // Route identifier
+                                    $matches[self::ASYNC_PREFIX] . $httpMethod // Prepend async prefix to method
                                 )
                             );
                         }
@@ -193,11 +194,11 @@ class GenericRouteGenerator
         if (isset($baseRoute)) {
             $routes->add($baseRoute);
             // If we have not found base controller action but we have universal action
-        } else if (isset($universalRoute)){
+        } elseif (isset($universalRoute)) {
             // Bind its pattern to universal controller callback
             $routes->add(
                 new Route(
-                    $prefix . '/{parameters:.*}',
+                    $prefix . '/',
                     $universalRoute->callback,
                     $module->id . self::CTR_BASE
                 )
