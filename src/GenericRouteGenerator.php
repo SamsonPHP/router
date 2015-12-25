@@ -15,7 +15,7 @@ use \samsonframework\routing\Route;
  * This class is needed to generate routes for old SamsonPHP modules
  * @package samsonphp\router
  */
-class GenericRouteGenerator implements RouteGeneratorInterface
+class GenericRouteGenerator
 {
     /** Default controller name */
     const CTR_BASE = '__base';
