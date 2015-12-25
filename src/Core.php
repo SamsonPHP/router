@@ -7,6 +7,8 @@
  */
 namespace samsonphp\router;
 
+use samsonframework\routing\Route;
+
 /**
  * Main routing logic core.
  *
@@ -49,7 +51,6 @@ class Core extends \samsonframework\routing\Core
         /** @var Route $route Found route object */
         $route = null;
         if ($result = $this->dispatch($path, $method, $route)) {
-
             // Get object from callback & set it as current active core module
             $core->active($route->callback[0]);
 
@@ -60,7 +61,6 @@ class Core extends \samsonframework\routing\Core
 
                 // If controller action has failed
                 if (!isset($result['status']) || !$result['status']) {
-                    // Handle event chain fail
                     $result['message'] = "\n" . 'Event failed: ' . $route->identifier;
                 }
 
