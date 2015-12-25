@@ -48,7 +48,7 @@ class Core extends \samsonframework\routing\Core
 
         /** @var Route $route Found route object */
         $route = null;
-        if ($this->dispatch($path, $method, $route)) {
+        if ($result = $this->dispatch($path, $method, $route)) {
 
             // Get object from callback & set it as current active core module
             $core->active($route->callback[0]);
