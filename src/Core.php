@@ -7,6 +7,7 @@
  */
 namespace samsonphp\router;
 
+use samsonframework\core\SystemInterface;
 use samsonframework\routing\Route;
 
 /**
@@ -23,35 +24,41 @@ class Core extends \samsonframework\routing\Core
      */
     protected function isAsynchronousRequest()
     {
-        return $_SERVER['HTTP_ACCEPT'] == '*/*' || isset($_SERVER['HTTP_SJSASYNC']) || isset($_POST['SJSASYNC']);
+        return $_SERVER['HTTP_ACCEPT'] == '*/*'
+        || isset($_SERVER['HTTP_SJSASYNC'])
+        || isset($_POST['SJSASYNC']);
     }
 
     /**
      * SamsonPHP core.routing event handler
      *
-     * @param \samson\core\Core $core Pointer to core object
+     * @param SystemInterface $core Pointer to core object
      * @param mixed $result Return value as routing result
-     * @param string $default Default route path
      * @return bool Routing result
      */
-    public function router(\samson\core\Core & $core, & $result, $default)
+    public function router(SystemInterface &$core, &$result)
     {
-        $path = $_SERVER['REQUEST_URI'];
-
         //elapsed('Start routing');
+        // Flag for matching SamsonPHP asynchronous requests
         $async = $this->isAsynchronousRequest();
-
+        // Get HTTP request path
+        $path = $_SERVER['REQUEST_URI'];
         // Get HTTP request method
         $method = $_SERVER['REQUEST_METHOD'];
         // Prepend HTTP request type, true - asynchronous
         $method = ($async ? GenericRouteGenerator::ASYNC_PREFIX : '').$method;
 
+        // Routing result
+        $result = false;
+
         //elapsed('Created routes');
 
         /** @var Route $route Found route object */
         $route = null;
+
+        /** @var mixed $result Dispatching result, usually route callback result */
         if ($result = $this->dispatch($path, $method, $route)) {
-            // Get object from callback & set it as current active core module
+            // Get object from callback and set it as current active core module
             $core->active($route->callback[0]);
 
             // If this route is asynchronous
@@ -62,21 +69,21 @@ class Core extends \samsonframework\routing\Core
                 // If controller action has failed
                 if (!isset($result['status']) || !$result['status']) {
                     $result['message'] = "\n" . 'Event failed: ' . $route->identifier;
+                    $result['status'] = 0;
                 }
 
                 // Encode event result as json object
                 echo json_encode($result, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
 
-                // Successfully stop routing execution
-                return true;
+                // Mark as successful
+                $result = true;
             }
 
-            // Stop candidate search
+            // If no result is passed - consider success
             $result = !isset($result) ? true : $result;
         }
 
-        // We could not dispatch route
-        return false;
         //elapsed('Finished routing');
+        return $result;
     }
 }
