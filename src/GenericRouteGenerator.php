@@ -69,12 +69,10 @@ class GenericRouteGenerator
     /**
      * GenericRouteGenerator constructor.
      * @param Module[] $modules
-     * @param Route|null $default Defautl / route
      */
-    public function __construct(array & $modules, Route $default = null)
+    public function __construct(array & $modules)
     {
         $this->routes = new RouteCollection();
-        $this->routes->add($default);
         $this->modules = & $modules;
     }
 

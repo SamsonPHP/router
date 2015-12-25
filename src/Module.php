@@ -42,16 +42,19 @@ class Module extends \samson\core\CompressableExternalModule
     }
 
     /**
-     * Module initialization
+     * Module initialization.
+     *
      * @param array $params Initialization parameters collection
+     * @return bool Initialization result
      */
     public function init(array $params = array())
     {
         // Create SamsonPHP routing table from loaded modules
-        $rg = new GenericRouteGenerator($this->system->module_stack, $this->findGenericDefaultAction());
+        $rg = new GenericRouteGenerator($this->system->module_stack);
 
         // Generate web-application routes
         $routes = $rg->generate();
+        $routes->add($this->findGenericDefaultAction());
 
         // Create router core component
         $this->core = new Core($routes);
