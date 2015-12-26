@@ -132,6 +132,8 @@ class GenericRouteGenerator
         $routes = new RouteCollection();
         /** @var Route $universalRoute */
         $universalRoute = null;
+        /** @var Route $universalRoute2 */
+        $universalRoute2 = null;
         /** @var Route $baseRoute */
         $baseRoute = null;
 
@@ -141,7 +143,19 @@ class GenericRouteGenerator
             // Try to find standard controllers
             switch (strtolower($method)) {
                 case self::CTR_UNI: // Add generic controller action
-                    $universalRoute = new Route($prefix . '/{parameters:.*}', array($module, $method), $module->id . self::CTR_UNI);
+                    // Universal route with parameters
+                    $universalRoute = new Route(
+                        $prefix . '/' . $this->buildMethodParameters($module, $method),
+                        array($module, $method),
+                        $module->id . self::CTR_UNI
+                    );
+
+                    // Generic universal route
+                    $universalRoute2 = new Route(
+                        $prefix . '/{parameters:.*}',
+                        array($module, $method),
+                        $module->id . self::CTR_UNI.'2'
+                    );
                     //trace($this->buildMethodParameters($module, $method), 1);
                     break;
                 case self::CTR_BASE: // Add base controller action
@@ -188,6 +202,11 @@ class GenericRouteGenerator
         // Add universal controller action
         if (isset($universalRoute)) {
             $routes->add($universalRoute);
+        }
+
+        // Add universal controller action
+        if (isset($universalRoute2)) {
+            $routes->add($universalRoute2);
         }
 
         // Add base controller action
