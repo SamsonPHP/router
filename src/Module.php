@@ -72,7 +72,7 @@ class Module extends \samson\core\CompressableExternalModule
             $routerLogic = $generator->generate($routes);
 
             // Store router logic in cache
-            file_put_contents($cacheFile, '<?php '.$routerLogic);
+            file_put_contents($cacheFile, '<?php '."\n".$routerLogic);
         }
 
         require($cacheFile);
