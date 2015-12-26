@@ -216,6 +216,7 @@ class GenericRouteGenerator
         $routes = new RouteCollection();
         /** @var callable $universalCallback */
         $universalCallback = null;
+        $universalRoutes = new RouteCollection();
         /** @var Route $baseRoute */
         $baseRoute = null;
 
@@ -226,7 +227,7 @@ class GenericRouteGenerator
             switch (strtolower($method)) {
                 case self::CTR_UNI: // Add generic controller action
                     $universalCallback = array($module, $method);
-                    $routes->merge($this->getParametrizedRoutes($module, $prefix, $method));
+                    $universalRoutes->merge($this->getParametrizedRoutes($module, $prefix, $method));
                     break;
                 case self::CTR_BASE: // Add base controller action
                     $baseRoute = new Route($prefix . '/', array($module, $method), $module->id . self::CTR_BASE);
@@ -254,6 +255,9 @@ class GenericRouteGenerator
                     }
             }
         }
+
+        // Add universal route
+        $routes->merge($universalRoutes);
 
         // Add base controller action
         if (isset($baseRoute)) {
