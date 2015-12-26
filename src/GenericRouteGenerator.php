@@ -144,7 +144,7 @@ class GenericRouteGenerator
      * @return RouteCollection
      * @throws \samsonframework\routing\exception\IdentifierDuplication
      */
-    protected function getParametrizedRoutes($module, $prefix, $method, $action, $async = '')
+    protected function getParametrizedRoutes($module, $prefix, $method, $action = '', $async = '')
     {
         $routes = new RouteCollection();
 
@@ -161,7 +161,11 @@ class GenericRouteGenerator
         }
 
         // Build controller action pattern
-        $pattern = $prefix . '/' . $action . '/' . implode('/', $parameters);
+        $pattern = $prefix . '/';
+        // Add controller action if passed
+        $pattern = isset($action{0}) ? $pattern . $action . '/' : $pattern;
+        // Add needed parameters
+        $pattern .= implode('/', $parameters);
 
         $optionalPattern = $pattern;
 
@@ -210,10 +214,8 @@ class GenericRouteGenerator
     {
         /** @var RouteCollection $routes */
         $routes = new RouteCollection();
-        /** @var Route $universalRoute */
-        $universalRoute = null;
-        /** @var Route $universalRoute2 */
-        $universalRoute2 = null;
+        /** @var callable $universalCallback */
+        $universalCallback = null;
         /** @var Route $baseRoute */
         $baseRoute = null;
 
@@ -223,20 +225,8 @@ class GenericRouteGenerator
             // Try to find standard controllers
             switch (strtolower($method)) {
                 case self::CTR_UNI: // Add generic controller action
-                    // Universal route with parameters
-                    $universalRoute = new Route(
-                        $prefix . '/' . $this->buildMethodParameters($module, $method),
-                        array($module, $method),
-                        $module->id . self::CTR_UNI
-                    );
-
-                    // Generic universal route
-                    $universalRoute2 = new Route(
-                        $prefix . '/{parameters:.*}',
-                        array($module, $method),
-                        $module->id . self::CTR_UNI.'2'
-                    );
-                    //trace($this->buildMethodParameters($module, $method), 1);
+                    $universalCallback = array($module, $method);
+                    $routes->merge($this->getParametrizedRoutes($module, $prefix, $method));
                     break;
                 case self::CTR_BASE: // Add base controller action
                     $baseRoute = new Route($prefix . '/', array($module, $method), $module->id . self::CTR_BASE);
@@ -260,31 +250,21 @@ class GenericRouteGenerator
                 default:
                     // Match controller action OOP pattern
                     if (preg_match('/^' . self::OBJ_PREFIX . '(?<async_>async_)?(?<cache_>cache_)?(?<action>.+)/i', $method, $matches)) {
-                        $routes->merge($this->getParametrizedRoutes($module, $prefix, $method, $matches['action']), $matches[self::ASYNC_PREFIX]);
+                        $routes->merge($this->getParametrizedRoutes($module, $prefix, $method, $matches['action'], $matches[self::ASYNC_PREFIX]));
                     }
             }
-        }
-
-        // Add universal controller action
-        if (isset($universalRoute)) {
-            $routes->add($universalRoute);
-        }
-
-        // Add universal controller action
-        if (isset($universalRoute2)) {
-            $routes->add($universalRoute2);
         }
 
         // Add base controller action
         if (isset($baseRoute)) {
             $routes->add($baseRoute);
             // If we have not found base controller action but we have universal action
-        } elseif (isset($universalRoute)) {
+        } elseif (isset($universalCallback)) {
             // Bind its pattern to universal controller callback
             $routes->add(
                 new Route(
                     $prefix . '/',
-                    $universalRoute->callback,
+                    $universalCallback,
                     $module->id . self::CTR_BASE
                 )
             );
