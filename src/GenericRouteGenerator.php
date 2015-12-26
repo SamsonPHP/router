@@ -100,7 +100,23 @@ class GenericRouteGenerator
     }
 
     /**
-     * Convert class method signature into route pattern with parameters
+     * Class method signature parameters.
+     *
+     * @param object $object Object
+     * @param string $method Method name
+     * @return array Method parameters
+     */
+    protected function getMethodParameters($object, $method)
+    {
+        // Analyze callback arguments
+        $reflectionMethod = new \ReflectionMethod($object, $method);
+
+        return $reflectionMethod->getParameters();
+    }
+
+    /**
+     * Convert class method signature into route pattern with parameters.
+     *
      * @param object $object Object
      * @param string $method Method name
      * @return string Pattern string with parameters placeholders
@@ -110,14 +126,78 @@ class GenericRouteGenerator
         $pattern = array();
 
         // Analyze callback arguments
-        $reflectionMethod = new \ReflectionMethod($object, $method);
-        foreach ($reflectionMethod->getParameters() as $parameter) {
+        foreach ($this->getMethodParameters($object, $method) as $parameter) {
             // Build pattern markers
             $pattern[] = '{' . $parameter->getName() . '}';
             //trace($parameter->getDefaultValue(),1);
         }
 
         return implode('/', $pattern);
+    }
+
+    /**
+     * @param $module
+     * @param $prefix
+     * @param $method
+     * @param $action
+     * @param string $async
+     * @return RouteCollection
+     * @throws \samsonframework\routing\exception\IdentifierDuplication
+     */
+    protected function getParametrizedRoutes($module, $prefix, $method, $action, $async = '')
+    {
+        $routes = new RouteCollection();
+
+        // Iterate method parameters list to find NOT optional parameters
+        $parameters = array();
+        $optionalParameters = array();
+        foreach ($this->getMethodParameters($module, $method) as $parameter) {
+            if (!$parameter->isOptional()) {
+                // Append parameter to collection
+                $parameters[] = '{' . $parameter->getName() . '}';
+            } else {
+                $optionalParameters[] = $parameter->getName();
+            }
+        }
+
+        // Build controller action pattern
+        $pattern = $prefix . '/' . $action . '/' . implode('/', $parameters);
+
+        $optionalPattern = $pattern;
+
+        // Iterate all optional parameters
+        foreach ($optionalParameters as $parameter) {
+            // Add optional parameter as now we consider it needed
+            $optionalPattern .= '{' . $parameter . '}/';
+
+            // Add SamsonPHP specific async method
+            foreach (Route::$METHODS as $httpMethod) {
+                // Add route for this controller action
+                $routes->add(
+                    new Route(
+                        $optionalPattern,
+                        array($module, $method), // Route callback
+                        $module->id . '_' . $httpMethod . '_' . $method.'_'.$parameter, // Route identifier
+                        $async . $httpMethod // Prepend async prefix to method if found
+                    )
+                );
+            }
+        }
+
+        // Add SamsonPHP without optional parameters
+        foreach (Route::$METHODS as $httpMethod) {
+            // Add route for this controller action
+            $routes->add(
+                new Route(
+                    $pattern,
+                    array($module, $method), // Route callback
+                    $module->id . '_' . $httpMethod . '_' . $method, // Route identifier
+                    $async . $httpMethod // Prepend async prefix to method if found
+                )
+            );
+        }
+
+        return $routes;
     }
 
     /**
@@ -180,21 +260,7 @@ class GenericRouteGenerator
                 default:
                     // Match controller action OOP pattern
                     if (preg_match('/^' . self::OBJ_PREFIX . '(?<async_>async_)?(?<cache_>cache_)?(?<action>.+)/i', $method, $matches)) {
-                        // Build controller action pattern
-                        $pattern = $prefix . '/' . $matches['action'] . '/' . $this->buildMethodParameters($module, $method);
-
-                        // Add SamsonPHP specific async method
-                        foreach (Route::$METHODS as $httpMethod) {
-                            // Add route for this controller action
-                            $routes->add(
-                                new Route(
-                                    $pattern,
-                                    array($module, $method), // Route callback
-                                    $module->id . '_' . $httpMethod . '_' . $method, // Route identifier
-                                    $matches[self::ASYNC_PREFIX] . $httpMethod // Prepend async prefix to method
-                                )
-                            );
-                        }
+                        $routes->merge($this->getParametrizedRoutes($module, $prefix, $method, $matches['action']), $matches[self::ASYNC_PREFIX]);
                     }
             }
         }
