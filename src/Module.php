@@ -56,12 +56,6 @@ class Module extends \samson\core\CompressableExternalModule
         $routes = $rg->generate();
         $routes->add($this->findGenericDefaultAction());
 
-        // Create router core component
-        $this->core = new Core($routes);
-
-        // Subscribe to samsonphp\core routing event
-        \samsonphp\event\Event::subscribe('core.routing', array($this->core, 'router'));
-
         // Create cache marker
         $cacheFile = $routes->hash().'.php';
 
@@ -76,6 +70,12 @@ class Module extends \samson\core\CompressableExternalModule
         }
 
         require($cacheFile);
+
+        // Create router core component
+        $this->core = new Core($routes);
+
+        // Subscribe to samsonphp\core routing event
+        \samsonphp\event\Event::subscribe('core.routing', array($this->core, 'router'));
 
         return parent::init($params);
     }
