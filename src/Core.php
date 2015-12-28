@@ -57,7 +57,7 @@ class Core extends \samsonframework\routing\Core
         $route = null;
 
         /** @var mixed $result Dispatching result, usually route callback result */
-        if ($result = $this->dispatch($path, $method, $route)) {
+        if (($result = $this->dispatch($path, $method, $route)) !== false) {
             // Get object from callback and set it as current active core module
             $core->active($route->callback[0]);
 
@@ -80,10 +80,11 @@ class Core extends \samsonframework\routing\Core
             }
 
             // If no result is passed - consider success
-            $result = !isset($result) ? true : $result;
+            $result = $result !== false ? true : $result;
         }
 
         //elapsed('Finished routing');
+        // Return true or false depending on $result
         return $result;
     }
 }
