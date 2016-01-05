@@ -1,7 +1,7 @@
 <?php
 namespace samsonphp\router;
 
-use samsonframework\routing\Generator;
+use samsonframework\routing\generator\Structure;
 use samsonframework\routing\Route;
 
 /**
@@ -61,9 +61,9 @@ class Module extends \samson\core\CompressableExternalModule
 
         // If we need to refresh cache
         if ($this->cache_refresh($cacheFile)) {
-            $generator = new Generator();
+            $generator = new Structure($routes, new \samsonphp\generator\Generator());
             // Generate routing logic function
-            $routerLogic = $generator->generate($routes);
+            $routerLogic = $generator->generate();
 
             // Store router logic in cache
             file_put_contents($cacheFile, '<?php '."\n".$routerLogic);

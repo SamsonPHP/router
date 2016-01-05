@@ -175,7 +175,7 @@ class GenericRouteGenerator
             $optionalPattern .= '{' . $parameter . '}/';
 
             // Add SamsonPHP specific async method
-            foreach (Route::$httpMethods as $httpMethod) {
+            foreach (array(Route::METHOD_GET, Route::METHOD_POST) as $httpMethod) {
                 // Add route for this controller action
                 $routes->add(
                     new Route(
@@ -189,7 +189,7 @@ class GenericRouteGenerator
         }
 
         // Add SamsonPHP without optional parameters
-        foreach (Route::$httpMethods as $httpMethod) {
+        foreach (array(Route::METHOD_GET, Route::METHOD_POST) as $httpMethod) {
             // Add route for this controller action
             $routes->add(
                 new Route(
