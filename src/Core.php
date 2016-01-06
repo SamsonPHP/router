@@ -30,6 +30,24 @@ class Core extends \samsonframework\routing\Core
     }
 
     /**
+     * Parse route parameters received from router logic function.
+     *
+     * @param Route $route Route instance
+     * @param array $receivedParameters Collection of parsed parameters
+     * @return array Collection of route callback needed parameters
+     */
+    protected function parseParameters(Route $route, array $receivedParameters)
+    {
+        // Gather parsed route parameters in correct order
+        $parameters = array();
+        foreach ($route->parameters as $name) {
+            // Add to parameters collection
+            $parameters[] = &$receivedParameters[$name];
+        }
+        return $parameters;
+    }
+
+    /**
      * SamsonPHP core.routing event handler
      *
      * @param SystemInterface $core Pointer to core object
@@ -48,16 +66,16 @@ class Core extends \samsonframework\routing\Core
         // Prepend HTTP request type, true - asynchronous
         $method = ($async ? GenericRouteGenerator::ASYNC_PREFIX : '').$method;
 
-        // Routing result
         $result = false;
 
-        //elapsed('Created routes');
+        /** @var mixed $routeMetadata Dispatching result route metadata */
+        if (is_array($routeMetadata = $this->dispatch($path, $method))) {
+            /** @var Route $route Found route object */
+            $route = $this->routes[$routeMetadata[0]];
 
-        /** @var Route $route Found route object */
-        $route = null;
+            // Routing result
+            $result = call_user_func_array($route->callback, $this->parseParameters($route, $routeMetadata[1]));
 
-        /** @var mixed $result Dispatching result, usually route callback result */
-        if (($result = $this->dispatch($path, $method, $route)) !== false) {
             // Get object from callback and set it as current active core module
             $core->active($route->callback[0]);
 
