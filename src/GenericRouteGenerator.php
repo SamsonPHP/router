@@ -7,7 +7,6 @@
  */
 namespace samsonphp\router;
 
-use \samsonframework\routing\RouteGeneratorInterface;
 use \samsonframework\routing\RouteCollection;
 use \samsonframework\routing\Route;
 
