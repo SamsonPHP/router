@@ -7,6 +7,7 @@
  */
 namespace samsonphp\router;
 
+//[PHPCOMPRESSOR(remove,start)]
 use \samsonframework\routing\RouteCollection;
 use \samsonframework\routing\Route;
 
@@ -50,6 +51,7 @@ class GenericRouteGenerator
     const ASYNC_PREFIX = 'async_';
     /** CACHE controller prefix */
     const CACHE_PREFIX = 'cache_';
+    //[PHPCOMPRESSOR(remove,start)]
 
     /** @var RouteCollection Generated routes collection */
     protected $routes;
@@ -275,4 +277,5 @@ class GenericRouteGenerator
 
         return $routes;
     }
+    //[PHPCOMPRESSOR(remove,end)]
 }

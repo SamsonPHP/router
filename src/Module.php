@@ -19,9 +19,6 @@ class Module extends \samson\core\CompressableExternalModule
     /** @var string Default controller module identifier */
     public $defaultModule = 'main';
 
-    /** @var RouteCollection Routes collection */
-    protected $routes;
-
     /**
      * Old generic "main_page" route callback searcher to match old logic.
      *
@@ -51,25 +48,26 @@ class Module extends \samson\core\CompressableExternalModule
      */
     public function init(array $params = array())
     {
+        //[PHPCOMPRESSOR(remove,start)]
         // Create SamsonPHP routing table from loaded modules
         $rg = new GenericRouteGenerator($this->system->module_stack);
 
         // Generate web-application routes
-        $this->routes = $rg->generate();
-        $this->routes->add($this->findGenericDefaultAction());
+        $routes = $rg->generate();
+        $routes->add($this->findGenericDefaultAction());
 
         // Create cache marker
-        $cacheFile = $this->routes->hash().'.php';
-
+        $cacheFile = $routes->hash().'.php';
         // If we need to refresh cache
         if ($this->cache_refresh($cacheFile)) {
-            $generator = new Structure($this->routes, new \samsonphp\generator\Generator());
+            $generator = new Structure($routes, new \samsonphp\generator\Generator());
             // Generate routing logic function
             $routerLogic = $generator->generate();
 
             // Store router logic in cache
             file_put_contents($cacheFile, '<?php '."\n".$routerLogic);
         }
+        //[PHPCOMPRESSOR(remove,end)]
 
         require($cacheFile);
 
@@ -145,7 +143,7 @@ class Module extends \samson\core\CompressableExternalModule
         /** @var mixed $routeMetadata Dispatching result route metadata */
         if (is_array($routeMetadata = call_user_func(Core::ROUTING_LOGIC_FUNCTION, $path, $method))) {
             // Get callback info
-            list($module, $method) = explode("#", $this->routes[$routeMetadata[0]]->callback);
+            list($module, $method) = explode("#", $routeMetadata[2]);
             // Get module
             $module = $core->module($module);
             // Create callback
