@@ -1,6 +1,8 @@
 <?php
 namespace samsonphp\router;
 
+use samsonframework\core\SystemInterface;
+use samsonframework\routing\Core;
 use samsonframework\routing\generator\Structure;
 use samsonframework\routing\Route;
 
@@ -17,8 +19,8 @@ class Module extends \samson\core\CompressableExternalModule
     /** @var string Default controller module identifier */
     public $defaultModule = 'main';
 
-    /** @var Core Routing core */
-    protected $core;
+    /** @var RouteCollection Routes collection */
+    protected $routes;
 
     /**
      * Old generic "main_page" route callback searcher to match old logic.
@@ -35,10 +37,10 @@ class Module extends \samson\core\CompressableExternalModule
             // Consider as module identifier is passed
         } elseif (isset($this->system->module_stack[$this->defaultModule])) {
             // Try to find module universal controller action
-            $callback = array($this->system->module_stack[$this->defaultModule], self::CTR_UNI);
+            $callback = $this->system->module_stack[$this->defaultModule]->id.'#'.self::CTR_UNI;
         }
 
-        return new Route('/', $callback,'main_page');
+        return new Route('/', $callback, 'main_page');
     }
 
     /**
@@ -53,15 +55,15 @@ class Module extends \samson\core\CompressableExternalModule
         $rg = new GenericRouteGenerator($this->system->module_stack);
 
         // Generate web-application routes
-        $routes = $rg->generate();
-        $routes->add($this->findGenericDefaultAction());
+        $this->routes = $rg->generate();
+        $this->routes->add($this->findGenericDefaultAction());
 
         // Create cache marker
-        $cacheFile = $routes->hash().'.php';
+        $cacheFile = $this->routes->hash().'.php';
 
         // If we need to refresh cache
         if ($this->cache_refresh($cacheFile)) {
-            $generator = new Structure($routes, new \samsonphp\generator\Generator());
+            $generator = new Structure($this->routes, new \samsonphp\generator\Generator());
             // Generate routing logic function
             $routerLogic = $generator->generate();
 
@@ -71,12 +73,120 @@ class Module extends \samson\core\CompressableExternalModule
 
         require($cacheFile);
 
-        // Create router core component
-        $this->core = new Core($routes);
-
         // Subscribe to samsonphp\core routing event
-        \samsonphp\event\Event::subscribe('core.routing', array($this->core, 'router'));
+        \samsonphp\event\Event::subscribe('core.routing', array($this, 'router'));
 
+        // Continue initialization
         return parent::init($params);
+    }
+
+    /**
+     * Define if HTTP request is asynchronous.
+     *
+     * @return bool True if request is asynchronous
+     */
+    public function isAsynchronousRequest()
+    {
+        return $_SERVER['HTTP_ACCEPT'] == '*/*'
+        || isset($_SERVER['HTTP_SJSASYNC'])
+        || isset($_POST['SJSASYNC']);
+    }
+
+    /**
+     * Parse route parameters received from router logic function.
+     *
+     * @param callable $callback Route instance
+     * @param array $receivedParameters Collection of parsed parameters
+     * @return array Collection of route callback needed parameters
+     */
+    protected function parseParameters($callback, array $receivedParameters)
+    {
+        $parameters = array();
+        // Parse callback signature and get parameters list
+        if (is_callable($callback)) {
+            $reflectionMethod = is_array($callback)
+                ? new \ReflectionMethod($callback[0], $callback[1])
+                : new \ReflectionFunction($callback);
+            foreach ($reflectionMethod->getParameters() as $parameter) {
+                $parameters[] = $parameter->getName();
+            }
+        }
+
+        // Gather parsed route parameters in correct order
+        $foundParameters = array();
+        foreach ($parameters as $name) {
+            // Add to parameters collection
+            $foundParameters[] = &$receivedParameters[$name];
+        }
+        return $foundParameters;
+    }
+
+    /**
+     * SamsonPHP core.routing event handler
+     *
+     * @param SystemInterface $core Pointer to core object
+     * @param mixed $result Return value as routing result
+     * @return bool Routing result
+     */
+    public function router(SystemInterface &$core, &$result)
+    {
+        //elapsed('Start routing');
+        // Flag for matching SamsonPHP asynchronous requests
+        $async = $this->isAsynchronousRequest();
+        // Get HTTP request path
+        $path = $_SERVER['REQUEST_URI'];
+        // Get HTTP request method
+        $method = $_SERVER['REQUEST_METHOD'];
+        // Prepend HTTP request type, true - asynchronous
+        $method = ($async ? GenericRouteGenerator::ASYNC_PREFIX : '').$method;
+
+        $result = false;
+
+        /** @var mixed $routeMetadata Dispatching result route metadata */
+        if (is_array($routeMetadata = call_user_func(Core::ROUTING_LOGIC_FUNCTION, $path, $method))) {
+            // Get callback info
+            list($module, $method) = explode("#", $this->routes[$routeMetadata[0]]->callback);
+            // Get module
+            $module = $core->module($module);
+            // Create callback
+            $callback = array($module, $method);
+
+            // Check if we have vaild callback
+            if (is_callable($callback)) {
+                // Routing result
+                $result = call_user_func_array(
+                    $callback,
+                    $this->parseParameters($callback, $routeMetadata[1])
+                );
+
+                // Get object from callback and set it as current active core module
+                $core->active($module);
+
+                // If this route is asynchronous
+                if ($async) {
+                    // Set async response
+                    $core->async(true);
+
+                    // If controller action has failed
+                    if (!isset($result['status']) || !$result['status']) {
+                        $result['message'] = "\n" . 'Event failed: ' . $routeMetadata[0];
+                        $result['status'] = 0;
+                    }
+
+                    // Encode event result as json object
+                    echo json_encode($result, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+
+                    // Mark as successful
+                    $result = true;
+                }
+            }
+
+            // If no result is passed - consider success
+            $result = $result !== false ? true : $result;
+        }
+
+        //elapsed('Finished routing');
+        // Return true or false depending on $result
+        return $result;
     }
 }

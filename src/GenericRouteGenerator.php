@@ -180,7 +180,7 @@ class GenericRouteGenerator
                 $routes->add(
                     new Route(
                         $optionalPattern,
-                        array($module, $method), // Route callback
+                        $module->id.'#'.$method, // Route callback
                         $module->id . '_' . $httpMethod . '_' . $method.'_'.$parameter, // Route identifier
                         $async . $httpMethod // Prepend async prefix to method if found
                     )
@@ -194,7 +194,7 @@ class GenericRouteGenerator
             $routes->add(
                 new Route(
                     $pattern,
-                    array($module, $method), // Route callback
+                    $module->id.'#'.$method, // Route callback
                     $module->id . '_' . $httpMethod . '_' . $method, // Route identifier
                     $async . $httpMethod // Prepend async prefix to method if found
                 )
@@ -226,11 +226,11 @@ class GenericRouteGenerator
             // Try to find standard controllers
             switch (strtolower($method)) {
                 case self::CTR_UNI: // Add generic controller action
-                    $universalCallback = array($module, $method);
+                    $universalCallback = $module->id.'#'.$method;
                     $universalRoutes->merge($this->getParametrizedRoutes($module, $prefix, $method));
                     break;
                 case self::CTR_BASE: // Add base controller action
-                    $baseRoute = new Route($prefix . '/', array($module, $method), $module->id . self::CTR_BASE);
+                    $baseRoute = new Route($prefix . '/', $module->id.'#'.$method, $module->id . self::CTR_BASE);
                     break;
                 case self::CTR_POST:// not implemented
                 case self::CTR_PUT:// not implemented
