@@ -7,7 +7,6 @@
  */
 namespace samsonphp\router;
 
-//[PHPCOMPRESSOR(remove,start)]
 use \samsonframework\routing\RouteCollection;
 use \samsonframework\routing\Route;
 
