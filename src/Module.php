@@ -172,6 +172,12 @@ class Module extends \samson\core\CompressableExternalModule
                 // Get object from callback and set it as current active core module
                 $core->active($module);
 
+                // If this is cached method
+                if (stripos($method, self::CACHE_PREFIX) !== false) {
+                    // perform caching
+                    $core->cached();
+                }
+
                 // If this route is asynchronous
                 if ($async) {
                     // Set async response
