@@ -19,6 +19,9 @@ class Module extends \samson\core\CompressableExternalModule
     /** @var string Default controller module identifier */
     public $defaultModule = 'main';
 
+    /** @var string Path to routing logic cache file */
+    protected $cacheFile;
+
     /**
      * Old generic "main_page" route callback searcher to match old logic.
      *
@@ -57,25 +60,32 @@ class Module extends \samson\core\CompressableExternalModule
         $routes->add($this->findGenericDefaultAction());
 
         // Create cache marker
-        $cacheFile = $routes->hash().'.php';
+        $this->cacheFile = $routes->hash().'.php';
         // If we need to refresh cache
-        if ($this->cache_refresh($cacheFile)) {
+        if ($this->cache_refresh($this->cacheFile)) {
             $generator = new Structure($routes, new \samsonphp\generator\Generator());
             // Generate routing logic function
             $routerLogic = $generator->generate();
 
             // Store router logic in cache
-            file_put_contents($cacheFile, '<?php '."\n".$routerLogic);
+            file_put_contents($this->cacheFile, '<?php '."\n".$routerLogic);
         }
-        //[PHPCOMPRESSOR(remove,end)]
 
-        require($cacheFile);
+        require($this->cacheFile);
+        //[PHPCOMPRESSOR(remove,end)]
 
         // Subscribe to samsonphp\core routing event
         \samsonphp\event\Event::subscribe('core.routing', array($this, 'router'));
 
         // Continue initialization
         return parent::init($params);
+    }
+
+    /** @see \samson\core\CompressableExternalModule::afterCompress() */
+    public function afterCompress(&$obj = null, array &$code = null)
+    {
+        // Compress generated php code
+        $obj->compress_php($this->cacheFile, $this, $code, '');
     }
 
     /**
@@ -139,6 +149,8 @@ class Module extends \samson\core\CompressableExternalModule
         $method = ($async ? GenericRouteGenerator::ASYNC_PREFIX : '').$method;
 
         $result = false;
+
+        //$path = strtok(rtrim($method.'/'.ltrim($path, '/'),'/'),'?');
 
         /** @var mixed $routeMetadata Dispatching result route metadata */
         if (is_array($routeMetadata = call_user_func(Core::ROUTING_LOGIC_FUNCTION, $path, $method))) {
