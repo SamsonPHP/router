@@ -1,6 +1,7 @@
 <?php
 namespace samsonphp\router;
 
+use samson\core\SamsonLocale;
 use samsonframework\core\SystemInterface;
 use samsonframework\routing\Core;
 use samsonframework\routing\generator\Structure;
@@ -152,6 +153,11 @@ class Module extends \samson\core\CompressableExternalModule
 
         // Remove first slash if present, add method to path, remove GET params, remove trailing slash
         $path = rtrim(strtok($method.'/'.ltrim($path, '/'), '?'), '/');
+
+        // TODO: Optimize this
+        $pathParts = explode(Route::DELIMITER, $path);
+        SamsonLocale::parseURL($pathParts);
+        $path = implode(Route::DELIMITER, $pathParts);
 
         /** @var mixed $routeMetadata Dispatching result route metadata */
         if (is_array($routeMetadata = call_user_func(Core::ROUTING_LOGIC_FUNCTION, $path, $method))) {
