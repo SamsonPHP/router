@@ -168,7 +168,7 @@ class Module extends \samson\core\CompressableExternalModule
             // Create callback
             $callback = array($module, $method);
 
-            // Check if we have vaild callback
+            // Check if we have valid callback
             if (is_callable($callback)) {
                 // Routing result
                 $result = call_user_func_array(
