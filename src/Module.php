@@ -150,7 +150,8 @@ class Module extends \samson\core\CompressableExternalModule
 
         $result = false;
 
-        //$path = strtok(rtrim($method.'/'.ltrim($path, '/'),'/'),'?');
+        // Remove first slash if present, add method to path, remove GET params, remove trailing slash
+        $path = rtrim(strtok($method.'/'.ltrim($path, '/'), '?'), '/');
 
         /** @var mixed $routeMetadata Dispatching result route metadata */
         if (is_array($routeMetadata = call_user_func(Core::ROUTING_LOGIC_FUNCTION, $path, $method))) {
