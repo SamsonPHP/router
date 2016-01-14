@@ -167,7 +167,7 @@ class GenericRouteGenerator
         // Add needed parameters
         $pattern .= implode('/', $parameters);
 
-        $optionalPattern = $pattern;
+        $optionalPattern = $pattern.'/';
 
         // Iterate all optional parameters
         foreach ($optionalParameters as $parameter) {
