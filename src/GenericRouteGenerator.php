@@ -83,7 +83,7 @@ class GenericRouteGenerator
      */
     public function &generate()
     {
-        foreach ($this->modules as $moduleID => & $module) {
+        foreach ($this->modules as $moduleID => &$module) {
             // Try to get module routes using interface method
             $moduleRoutes = method_exists($module, 'routes') ? $module->routes() : array();
 
