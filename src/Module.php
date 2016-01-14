@@ -1,6 +1,7 @@
 <?php
 namespace samsonphp\router;
 
+use samson\core\SamsonLocale;
 use samsonframework\core\SystemInterface;
 use samsonframework\routing\Core;
 use samsonframework\routing\generator\Structure;
@@ -21,6 +22,9 @@ class Module extends \samson\core\CompressableExternalModule
 
     /** @var string Path to routing logic cache file */
     protected $cacheFile;
+
+    /** @var string Current URL path */
+    protected $requestURI;
 
     /**
      * Old generic "main_page" route callback searcher to match old logic.
@@ -74,6 +78,11 @@ class Module extends \samson\core\CompressableExternalModule
         require($this->cacheFile);
         //[PHPCOMPRESSOR(remove,end)]
 
+        // This should be change to receive path as a parameter on initialization
+        $pathParts = explode(Route::DELIMITER, $_SERVER['REQUEST_URI']);
+        SamsonLocale::parseURL($pathParts);
+        $this->requestURI = implode(Route::DELIMITER, $pathParts);
+
         // Subscribe to samsonphp\core routing event
         \samsonphp\event\Event::subscribe('core.routing', array($this, 'router'));
 
@@ -124,7 +133,10 @@ class Module extends \samson\core\CompressableExternalModule
         $foundParameters = array();
         foreach ($parameters as $name) {
             // Add to parameters collection
-            $foundParameters[] = &$receivedParameters[$name];
+            $parameterValue = &$receivedParameters[$name];
+            if (isset($parameterValue) && isset($parameterValue{0})) {
+                $foundParameters[] = $parameterValue;
+            }
         }
         return $foundParameters;
     }
@@ -142,7 +154,7 @@ class Module extends \samson\core\CompressableExternalModule
         // Flag for matching SamsonPHP asynchronous requests
         $async = $this->isAsynchronousRequest();
         // Get HTTP request path
-        $path = $_SERVER['REQUEST_URI'];
+        $path = $this->requestURI;//$_SERVER['REQUEST_URI'];
         // Get HTTP request method
         $method = $_SERVER['REQUEST_METHOD'];
         // Prepend HTTP request type, true - asynchronous
@@ -151,7 +163,7 @@ class Module extends \samson\core\CompressableExternalModule
         $result = false;
 
         // Remove first slash if present, add method to path, remove GET params, remove trailing slash
-        $path = rtrim(strtok($method.'/'.ltrim($path, '/'), '?'), '/');
+        $path = rtrim(strtok(ltrim($path, '/'), '?'), '/');
 
         /** @var mixed $routeMetadata Dispatching result route metadata */
         if (is_array($routeMetadata = call_user_func(Core::ROUTING_LOGIC_FUNCTION, $path, $method))) {
@@ -162,7 +174,7 @@ class Module extends \samson\core\CompressableExternalModule
             // Create callback
             $callback = array($module, $method);
 
-            // Check if we have vaild callback
+            // Check if we have valid callback
             if (is_callable($callback)) {
                 // Routing result
                 $result = call_user_func_array(
