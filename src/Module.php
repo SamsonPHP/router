@@ -133,7 +133,10 @@ class Module extends \samson\core\CompressableExternalModule
         $foundParameters = array();
         foreach ($parameters as $name) {
             // Add to parameters collection
-            $foundParameters[] = &$receivedParameters[$name];
+            $parameterValue = &$receivedParameters[$name];
+            if (isset($parameterValue) && isset($parameterValue{0})) {
+                $foundParameters[] = $parameterValue;
+            }
         }
         return $foundParameters;
     }
