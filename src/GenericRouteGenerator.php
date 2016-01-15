@@ -9,6 +9,7 @@ namespace samsonphp\router;
 
 use \samsonframework\routing\RouteCollection;
 use \samsonframework\routing\Route;
+use samsonphp\event\Event;
 
 /**
  * This class is needed to generate routes for old SamsonPHP modules
@@ -220,9 +221,14 @@ class GenericRouteGenerator
         /** @var Route $baseRoute */
         $baseRoute = null;
 
+        $prefix = '/' . $module->id;
+
+        Event::fire('samsonphp.router.create.module.routes', array($module, & $prefix));
+
+        //trace('!!!!!!!!!!!!!!!! - '.$prefix);
+
         // Iterate class methods
         foreach (get_class_methods($module) as $method) {
-            $prefix = '/' . $module->id;
             // Try to find standard controllers
             switch (strtolower($method)) {
                 case self::CTR_UNI: // Add generic controller action

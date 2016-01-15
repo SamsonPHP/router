@@ -5,6 +5,7 @@ use samsonframework\core\SystemInterface;
 use samsonframework\routing\Core;
 use samsonframework\routing\generator\Structure;
 use samsonframework\routing\Route;
+use samsonphp\event\Event;
 
 /**
  * SamsonPHP Routing module implementation.
@@ -13,6 +14,8 @@ use samsonframework\routing\Route;
  */
 class Module extends \samson\core\CompressableExternalModule
 {
+    const EVENT_ROUTE_FOUND = 'router.route.found';
+
     /** @var string Module identifier */
     public $id = 'router';
 
@@ -161,16 +164,18 @@ class Module extends \samson\core\CompressableExternalModule
             // Create callback
             $callback = array($module, $method);
 
+            // Trigger found route event
+            Event::fire(self::EVENT_ROUTE_FOUND, array(&$module, $callback));
+
             // Check if we have vaild callback
             if (is_callable($callback)) {
+                // Get object from callback and set it as current active core module
+                $core->active($module);
                 // Routing result
                 $result = call_user_func_array(
                     $callback,
                     $this->parseParameters($callback, $routeMetadata[1])
                 );
-
-                // Get object from callback and set it as current active core module
-                $core->active($module);
 
                 // If this route is asynchronous
                 if ($async) {
