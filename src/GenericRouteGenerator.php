@@ -84,7 +84,7 @@ class GenericRouteGenerator
      */
     public function &generate()
     {
-        foreach ($this->modules as $moduleID => & $module) {
+        foreach ($this->modules as $moduleID => &$module) {
             // Try to get module routes using interface method
             $moduleRoutes = method_exists($module, 'routes') ? $module->routes() : array();
 
@@ -168,7 +168,7 @@ class GenericRouteGenerator
         // Add needed parameters
         $pattern .= implode('/', $parameters);
 
-        $optionalPattern = $pattern;
+        $optionalPattern = $pattern.'/';
 
         // Iterate all optional parameters
         foreach ($optionalParameters as $parameter) {
