@@ -107,7 +107,8 @@ class Module extends \samson\core\CompressableExternalModule
      */
     public function isAsynchronousRequest()
     {
-        return $_SERVER['HTTP_ACCEPT'] == '*/*'
+        $httpAccept = isset($_SERVER['HTTP_ACCEPT']) ? $_SERVER['HTTP_ACCEPT'] : '';
+        return $httpAccept == '*/*'
         || isset($_SERVER['HTTP_SJSASYNC'])
         || isset($_POST['SJSASYNC']);
     }
