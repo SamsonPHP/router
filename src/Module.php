@@ -107,10 +107,7 @@ class Module extends \samson\core\CompressableExternalModule
      */
     public function isAsynchronousRequest()
     {
-        $httpAccept = isset($_SERVER['HTTP_ACCEPT']) ? $_SERVER['HTTP_ACCEPT'] : '';
-        return $httpAccept == '*/*'
-        || isset($_SERVER['HTTP_SJSASYNC'])
-        || isset($_POST['SJSASYNC']);
+        return isset($_SERVER['HTTP_SJSASYNC']) || isset($_POST['SJSASYNC']);
     }
 
     /**
@@ -167,7 +164,7 @@ class Module extends \samson\core\CompressableExternalModule
         $result = false;
 
         // Remove first slash if present, add method to path, remove GET params, remove trailing slash
-        $path = rtrim(strtok(ltrim($path, '/'), '?'), '/');
+        $path = rtrim(ltrim(strtok($path, '?'), '/'), '/');
 
         /** @var mixed $routeMetadata Dispatching result route metadata */
         if (is_array($routeMetadata = call_user_func(Core::ROUTING_LOGIC_FUNCTION, $path, $method))) {
