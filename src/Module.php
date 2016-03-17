@@ -169,7 +169,7 @@ class Module extends \samson\core\CompressableExternalModule
         /** @var mixed $routeMetadata Dispatching result route metadata */
         if (is_array($routeMetadata = call_user_func(Core::ROUTING_LOGIC_FUNCTION, $path, $method))) {
             // Check found route
-            if (count($routeMetadata[2]) === 2) {
+            if (strpos('#', $routeMetadata[2]) !== false) {
                 // Get callback info
                 list($module, $method) = explode("#", $routeMetadata[2]);
                 // Get module
