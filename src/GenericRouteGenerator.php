@@ -138,12 +138,13 @@ class GenericRouteGenerator
      * @param $module
      * @param $prefix
      * @param $method
-     * @param $action
+     * @param string $action
      * @param string $async
+     * @param string $cache
      * @return RouteCollection
      * @throws \samsonframework\routing\exception\IdentifierDuplication
      */
-    protected function getParametrizedRoutes($module, $prefix, $method, $action = '', $async = '')
+    protected function getParametrizedRoutes($module, $prefix, $method, $action = '', $async = '', $cache = '')
     {
         $routes = new RouteCollection();
 
@@ -230,11 +231,15 @@ class GenericRouteGenerator
             // Try to find standard controllers
             switch (strtolower($method)) {
                 case self::CTR_UNI: // Add generic controller action
+                case self::CTR_CACHE_UNI:
                     $universalCallback = $module->id.'#'.$method;
                     $universalRoutes->merge($this->getParametrizedRoutes($module, $prefix, $method));
                     break;
                 case self::CTR_BASE: // Add base controller action
                     $baseRoute = new Route($prefix . '/', $module->id.'#'.$method, $module->id . self::CTR_BASE);
+                    break;
+                case self::CTR_CACHE_BASE:
+                    $baseRoute = new Route($prefix . '/', $module->id.'#'.$method, $module->id . self::CTR_CACHE_BASE);
                     break;
                 case self::CTR_POST:// not implemented
                 case self::CTR_PUT:// not implemented
@@ -256,7 +261,14 @@ class GenericRouteGenerator
                     // Match controller action OOP pattern
                     if (preg_match('/^' . self::OBJ_PREFIX . '(?<async_>async_)?(?<cache_>cache_)?(?<action>.+)/i', $method, $matches)) {
                         $routes->merge(
-                            $this->getParametrizedRoutes($module, $prefix, $method, $matches['action'], $matches[self::ASYNC_PREFIX])
+                            $this->getParametrizedRoutes(
+                                $module,
+                                $prefix,
+                                $method,
+                                $matches['action'],
+                                $matches[self::ASYNC_PREFIX],
+                                $matches['cache_']
+                            )
                         );
                     }
             }
