@@ -37,14 +37,24 @@ class Module extends \samson\core\CompressableExternalModule
     protected function findGenericDefaultAction()
     {
         $callback = null;
+        // Set pointer to module
+        $module = &$this->system->module_stack[$this->defaultModule];
         // If callback is passed  - function name
         if (is_callable($this->defaultModule)) {
             // Use it as main controller callback
             $callback = $this->defaultModule;
             // Consider as module identifier is passed
-        } elseif (isset($this->system->module_stack[$this->defaultModule])) {
+        } elseif ($module !== null) {
             // Try to find module universal controller action
-            $callback = $this->system->module_stack[$this->defaultModule]->id.'#'.self::CTR_UNI;
+            if (method_exists($module, self::CTR_BASE)) {
+                $callback = $module->id . '#' . self::CTR_BASE;
+            } else if (method_exists($module, self::CTR_CACHE_BASE)) {
+                $callback = $module->id . '#' . self::CTR_CACHE_BASE;
+            } elseif (method_exists($module, self::CTR_UNI)) {
+                $callback = $module->id . '#' . self::CTR_UNI;
+            } elseif (method_exists($module, self::CTR_CACHE_UNI)) {
+                $callback = $module->id . '#' . self::CTR_CACHE_UNI;
+            }
         }
 
         return new Route('/', $callback, 'main_page');
@@ -169,7 +179,7 @@ class Module extends \samson\core\CompressableExternalModule
         /** @var mixed $routeMetadata Dispatching result route metadata */
         if (is_array($routeMetadata = call_user_func(Core::ROUTING_LOGIC_FUNCTION, $path, $method))) {
             // Check found route
-            if (strpos($routeMetadata[2], '#') !== false) {
+            if (count($routeMetadata) === 3) {
                 // Get callback info
                 list($module, $method) = explode("#", $routeMetadata[2]);
                 // Get module
