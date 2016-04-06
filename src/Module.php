@@ -23,6 +23,9 @@ class Module extends \samson\core\CompressableExternalModule
     /** @var string Default controller module identifier */
     public $defaultModule = 'main';
 
+    /** @var bool Use automatic locale resolving with browser response headers */
+    public $browserLocaleRedirect = false;
+
     /** @var string Path to routing logic cache file */
     protected $cacheFile;
 
@@ -91,10 +94,32 @@ class Module extends \samson\core\CompressableExternalModule
         require($this->cacheFile);
         //[PHPCOMPRESSOR(remove,end)]
 
+        // Set locale resolver mode
+        SamsonLocale::$leaveDefaultLocale = $this->browserLocaleRedirect;
+
         // This should be change to receive path as a parameter on initialization
-        $pathParts = explode(Route::DELIMITER, $_SERVER['REQUEST_URI']);
-        SamsonLocale::parseURL($pathParts);
+        $pathParts = array_values(array_filter(explode(Route::DELIMITER, $_SERVER['REQUEST_URI'])));
+         // Parse URL and store locale found bug
+        $localeFound = SamsonLocale::parseURL($pathParts, $this->browserLocaleRedirect);
+        // Gather URL path parts with removed locale placeholder
         $this->requestURI = implode(Route::DELIMITER, $pathParts);
+
+        // Get localization data
+        $current = SamsonLocale::current();
+        $default = SamsonLocale::$defaultLocale;
+
+        // Browser agent language detection logic
+        if ($this->browserLocaleRedirect && !$localeFound) {
+            // Redirect to browser language
+            $lang = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
+            /**
+             * If browser language header is supported by our web-application and we are already not on that locale
+             * and current locale is not default.
+             */
+            if ($current === $default && $current !== $lang && in_array($lang, SamsonLocale::get(), true)) {
+                header('Location: http://'.$_SERVER['HTTP_HOST'].'/'.$lang.'/'.$this->requestURI);exit;
+            }
+        }
 
         // Subscribe to samsonphp\core routing event
         \samsonphp\event\Event::subscribe('core.routing', array($this, 'router'));
