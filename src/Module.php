@@ -112,12 +112,17 @@ class Module extends \samson\core\CompressableExternalModule
         if ($this->browserLocaleRedirect && !$localeFound) {
             // Redirect to browser language
             $lang = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
+            // Is browser language supported by application
+            $langSupport = in_array($lang, SamsonLocale::get(), true);
+
             /**
              * If browser language header is supported by our web-application and we are already not on that locale
              * and current locale is not default.
              */
-            if ($current === $default && $current !== $lang && in_array($lang, SamsonLocale::get(), true)) {
+            if ($current === $default && $current !== $lang && $langSupport) {
                 header('Location: http://'.$_SERVER['HTTP_HOST'].'/'.$lang.'/'.$this->requestURI);exit;
+            } elseif (!$langSupport) {
+                SamsonLocale::$leaveDefaultLocale = false;
             }
         }
 
