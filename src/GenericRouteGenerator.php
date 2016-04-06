@@ -9,7 +9,7 @@ namespace samsonphp\router;
 
 use \samsonframework\routing\RouteCollection;
 use \samsonframework\routing\Route;
-use samsonphp\event\Event;
+use \samsonphp\event\Event;
 
 /**
  * This class is needed to generate routes for old SamsonPHP modules
@@ -84,15 +84,13 @@ class GenericRouteGenerator
      */
     public function &generate()
     {
-        foreach ($this->modules as $moduleID => &$module) {
-            // Try to get module routes using interface method
-            $moduleRoutes = method_exists($module, 'routes') ? $module->routes() : array();
+        foreach ($this->modules as &$module) {
+            // Generate generic routes
+            $moduleRoutes = $this->createGenericRoutes($module);
 
-            // There are no routes defined
-            if (!sizeof($moduleRoutes)) {
-                // Generate generic routes
-                $moduleRoutes = $this->createGenericRoutes($module);
-            }
+            // Try to get module routes using interface method
+            $moduleRoutes = method_exists($module, 'routes')
+                ? $module->routes($moduleRoutes) : $moduleRoutes;
 
             $this->routes = $this->routes->merge($moduleRoutes);
         }
@@ -103,9 +101,9 @@ class GenericRouteGenerator
     /**
      * Class method signature parameters.
      *
-     * @param object $object Object
+     * @param mixed $object Object
      * @param string $method Method name
-     * @return array Method parameters
+     * @return \ReflectionParameter[] Method parameters
      */
     protected function getMethodParameters($object, $method)
     {
@@ -118,7 +116,7 @@ class GenericRouteGenerator
     /**
      * Convert class method signature into route pattern with parameters.
      *
-     * @param object $object Object
+     * @param mixed $object Object
      * @param string $method Method name
      * @return string Pattern string with parameters placeholders
      */
@@ -140,12 +138,13 @@ class GenericRouteGenerator
      * @param $module
      * @param $prefix
      * @param $method
-     * @param $action
+     * @param string $action
      * @param string $async
+     * @param string $cache
      * @return RouteCollection
      * @throws \samsonframework\routing\exception\IdentifierDuplication
      */
-    protected function getParametrizedRoutes($module, $prefix, $method, $action = '', $async = '')
+    protected function getParametrizedRoutes($module, $prefix, $method, $action = '', $async = '', $cache = '')
     {
         $routes = new RouteCollection();
 
@@ -209,7 +208,7 @@ class GenericRouteGenerator
      * Generate old-fashioned routes collection.
      *
      * @param Object $module
-     * @return array
+     * @return RouteCollection
      */
     protected function createGenericRoutes(&$module)
     {
@@ -232,11 +231,15 @@ class GenericRouteGenerator
             // Try to find standard controllers
             switch (strtolower($method)) {
                 case self::CTR_UNI: // Add generic controller action
+                case self::CTR_CACHE_UNI:
                     $universalCallback = $module->id.'#'.$method;
                     $universalRoutes->merge($this->getParametrizedRoutes($module, $prefix, $method));
                     break;
                 case self::CTR_BASE: // Add base controller action
                     $baseRoute = new Route($prefix . '/', $module->id.'#'.$method, $module->id . self::CTR_BASE);
+                    break;
+                case self::CTR_CACHE_BASE:
+                    $baseRoute = new Route($prefix . '/', $module->id.'#'.$method, $module->id . self::CTR_CACHE_BASE);
                     break;
                 case self::CTR_POST:// not implemented
                 case self::CTR_PUT:// not implemented
@@ -257,7 +260,16 @@ class GenericRouteGenerator
                 default:
                     // Match controller action OOP pattern
                     if (preg_match('/^' . self::OBJ_PREFIX . '(?<async_>async_)?(?<cache_>cache_)?(?<action>.+)/i', $method, $matches)) {
-                        $routes->merge($this->getParametrizedRoutes($module, $prefix, $method, $matches['action'], $matches[self::ASYNC_PREFIX]));
+                        $routes->merge(
+                            $this->getParametrizedRoutes(
+                                $module,
+                                $prefix,
+                                $method,
+                                $matches['action'],
+                                $matches[self::ASYNC_PREFIX],
+                                $matches['cache_']
+                            )
+                        );
                     }
             }
         }
@@ -271,13 +283,7 @@ class GenericRouteGenerator
             // If we have not found base controller action but we have universal action
         } elseif (isset($universalCallback)) {
             // Bind its pattern to universal controller callback
-            $routes->add(
-                new Route(
-                    $prefix . '/',
-                    $universalCallback,
-                    $module->id . self::CTR_BASE
-                )
-            );
+            $routes->add(new Route($prefix . '/', $universalCallback, $module->id . self::CTR_BASE));
         }
 
         return $routes;
