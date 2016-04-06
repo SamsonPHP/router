@@ -121,7 +121,7 @@ class Module extends \samson\core\CompressableExternalModule
              */
             if ($current === $default && $current !== $lang && $langSupport) {
                 header('Location: http://'.$_SERVER['HTTP_HOST'].'/'.$lang.'/'.$this->requestURI);exit;
-            } elseif (!$langSupport) {
+            } elseif (!$langSupport || $lang === $current) {
                 SamsonLocale::$leaveDefaultLocale = false;
             }
         }
