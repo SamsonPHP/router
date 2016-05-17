@@ -98,7 +98,10 @@ class Module extends \samson\core\CompressableExternalModule
         SamsonLocale::$leaveDefaultLocale = $this->browserLocaleRedirect;
 
         // This should be change to receive path as a parameter on initialization
-        $pathParts = array_values(array_filter(explode(Route::DELIMITER, $_SERVER['REQUEST_URI'])));
+        $pathParts = array_values(array_filter(explode(Route::DELIMITER, $_SERVER['REQUEST_URI']), function($v){
+            return ($v !== '' && null !== $v);
+        }));
+
          // Parse URL and store locale found bug
         $localeFound = SamsonLocale::parseURL($pathParts, $this->browserLocaleRedirect);
         // Gather URL path parts with removed locale placeholder
