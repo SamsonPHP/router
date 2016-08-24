@@ -41,7 +41,7 @@ class Module extends \samson\core\CompressableExternalModule
     {
         $callback = null;
         // Set pointer to module
-        $module = &$this->system->module_stack[$this->defaultModule];
+        $module = &$this->system->getContainer()->getServices('module')[$this->defaultModule];
         // If callback is passed  - function name
         if (is_callable($this->defaultModule)) {
             // Use it as main controller callback
@@ -72,8 +72,9 @@ class Module extends \samson\core\CompressableExternalModule
     public function init(array $params = array())
     {
         //[PHPCOMPRESSOR(remove,start)]
+        $modules = $this->system->getContainer()->getServices('module');
         // Create SamsonPHP routing table from loaded modules
-        $rg = new GenericRouteGenerator($this->system->module_stack);
+        $rg = new GenericRouteGenerator($modules);
 
         // Generate web-application routes
         $routes = $rg->generate();
