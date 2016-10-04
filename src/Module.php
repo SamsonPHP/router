@@ -41,7 +41,7 @@ class Module extends \samson\core\CompressableExternalModule
     {
         $callback = null;
         // Set pointer to module
-        $module = &$this->system->getContainer()->getServices('module')[$this->defaultModule];
+        $module = $this->system->getContainer()->get($this->defaultModule);
         // If callback is passed  - function name
         if (is_callable($this->defaultModule)) {
             // Use it as main controller callback
